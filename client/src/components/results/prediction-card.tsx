@@ -1,5 +1,10 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GaugeChart } from "./gauge-chart";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 interface FactorItem {
   type: "positive" | "negative" | "warning";
@@ -27,59 +32,126 @@ export function PredictionCard({
   recommendation,
   fluid
 }: PredictionCardProps) {
-  // Define icon based on factor type
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  
+  // Get icon for factor type
   const getFactorIcon = (type: string) => {
     switch (type) {
       case "positive":
-        return <i className="ri-check-line text-green-400 mr-2 mt-0.5"></i>;
+        return <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />;
       case "negative":
-        return <i className="ri-error-warning-fill text-red-500 mr-2 mt-0.5"></i>;
+        return <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />;
       case "warning":
-        return <i className="ri-alert-fill text-yellow-400 mr-2 mt-0.5"></i>;
+        return <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />;
       default:
-        return <i className="ri-information-line text-blue-400 mr-2 mt-0.5"></i>;
+        return null;
     }
   };
-
-  const fluidGradients = {
-    blood: "from-[hsl(var(--blood-primary))] to-[hsl(var(--blood-secondary))]",
-    saliva: "from-[hsl(var(--saliva-primary))] to-[hsl(var(--saliva-secondary))]",
-    urine: "from-[hsl(var(--urine-primary))] to-[hsl(var(--urine-secondary))]",
-    csf: "from-[hsl(var(--csf-primary))] to-[hsl(var(--csf-secondary))]"
+  
+  // Get background color for risk level
+  const getRiskBackgroundColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case "low":
+        return "bg-green-500/10 text-green-700 dark:text-green-400";
+      case "moderate":
+        return "bg-amber-500/10 text-amber-700 dark:text-amber-400";
+      case "high":
+        return "bg-red-500/10 text-red-700 dark:text-red-400";
+      case "very high":
+        return "bg-red-600/10 text-red-700 dark:text-red-400";
+      default:
+        return "bg-blue-500/10 text-blue-700 dark:text-blue-400";
+    }
+  };
+  
+  // Handle downloading PDF report
+  const handleDownloadPDF = () => {
+    setIsGeneratingReport(true);
+    
+    // Simulate report generation (would be a backend call in real app)
+    setTimeout(() => {
+      setIsGeneratingReport(false);
+      toast({
+        title: "Report Generated",
+        description: "Your personalized health report has been downloaded.",
+      });
+      
+      // Create a dummy PDF download for demo purposes
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(`
+        BioPredict Health Report
+        
+        Analysis Type: ${title}
+        Risk Level: ${riskLevel} (${riskValue}%)
+        
+        Key Factors:
+        ${factors.map(f => `- ${f.text}`).join('\n')}
+        
+        Personalized Recommendations:
+        ${recommendation}
+        
+        This report is for informational purposes only and does not constitute medical advice.
+        Please consult with a healthcare professional for proper diagnosis and treatment.
+      `));
+      element.setAttribute('download', `biopredict_${fluid}_analysis.txt`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }, 2000);
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className={`bg-gradient-to-r ${fluidGradients[fluid]} px-4 py-3`}>
-        <h3 className="font-poppins font-semibold">{title}</h3>
+    <Card className="overflow-hidden border-2">
+      <CardHeader className={`${getRiskBackgroundColor(riskLevel)} border-b`}>
+        <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h4 className="font-medium mb-1">Risk Level</h4>
-            <p className={`text-2xl font-bold text-[hsl(var(--${fluid}-primary))]`}>{riskLevel}</p>
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row gap-6 items-center mb-6">
+          <div className="flex-shrink-0">
+            <GaugeChart
+              value={riskValue}
+              colorStart={riskColorStart}
+              colorEnd={riskColorEnd}
+              size="lg"
+            />
           </div>
-          
-          <GaugeChart 
-            value={riskValue} 
-            colorStart={riskColorStart} 
-            colorEnd={riskColorEnd}
-          />
+          <div className="flex flex-col justify-center text-center lg:text-left">
+            <h3 className="text-2xl font-bold mb-2">{riskLevel} Risk</h3>
+            <p className="text-muted-foreground">
+              Your risk level is <span className="font-medium">{riskValue}%</span>, which is considered {" "}
+              <span className="font-medium">{riskLevel.toLowerCase()}</span>.
+            </p>
+          </div>
         </div>
         
-        <h4 className="font-medium mb-2 text-sm">Key Factors:</h4>
-        <ul className="text-sm space-y-1 mb-4">
-          {factors.map((factor, index) => (
-            <li key={index} className="flex items-start">
-              {getFactorIcon(factor.type)}
-              <span>{factor.text}</span>
-            </li>
-          ))}
-        </ul>
+        <Separator className="my-6" />
         
-        <div className="bg-background rounded-md p-3 text-sm">
-          <h4 className="font-medium mb-1">Recommendations:</h4>
-          <p className="opacity-80">{recommendation}</p>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Key Factors</h3>
+            <ul className="space-y-3">
+              {factors.map((factor, index) => (
+                <li key={index} className="flex gap-3">
+                  {getFactorIcon(factor.type)}
+                  <span className="text-sm">{factor.text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Personalized Recommendation</h3>
+            <p className="text-sm text-muted-foreground">{recommendation}</p>
+          </div>
+          
+          <Button 
+            onClick={handleDownloadPDF} 
+            disabled={isGeneratingReport}
+            className="w-full"
+          >
+            {isGeneratingReport ? "Generating Report..." : "Download Detailed Report"}
+          </Button>
         </div>
       </CardContent>
     </Card>
