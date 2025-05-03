@@ -1,115 +1,70 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { VolumeIcon, Volume2Icon, PauseIcon } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { Volume2, Pause } from 'lucide-react';
 
 interface TextToSpeechProps {
   text: string;
 }
 
 export function TextToSpeech({ text }: TextToSpeechProps) {
-  const [speaking, setSpeaking] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const [utterance, setUtterance] = useState<SpeechSynthesisUtterance | null>(null);
-
-  useEffect(() => {
-    // Check if browser supports speech synthesis
-    if (!('speechSynthesis' in window)) {
-      setSupported(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
+  const speak = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
       return;
     }
-
-    const synth = window.speechSynthesis;
-    const newUtterance = new SpeechSynthesisUtterance(text);
     
-    // Try to set a friendly voice
-    let voices = synth.getVoices();
-    if (voices.length === 0) {
-      // Voice list isn't loaded yet, wait for it
-      window.speechSynthesis.onvoiceschanged = () => {
-        voices = synth.getVoices();
-        const englishVoice = voices.find(voice => voice.lang.includes('en') && voice.name.includes('Female'));
-        if (englishVoice) newUtterance.voice = englishVoice;
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Setting a balanced speed
+      utterance.rate = 0.9;
+      
+      // Try to get a pleasant voice - ideally a female voice for medical content
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Google UK English Female')
+      );
+      
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+      
+      // Handle completion
+      utterance.onend = () => {
+        setIsSpeaking(false);
       };
-    } else {
-      const englishVoice = voices.find(voice => voice.lang.includes('en') && voice.name.includes('Female'));
-      if (englishVoice) newUtterance.voice = englishVoice;
-    }
-    
-    // Set properties for better sound
-    newUtterance.rate = 1; // Normal speed
-    newUtterance.pitch = 1; // Normal pitch
-    
-    // Handle speech end event
-    newUtterance.onend = () => {
-      setSpeaking(false);
-    };
-    
-    setUtterance(newUtterance);
-    
-    // Clean up
-    return () => {
-      if (speaking) {
-        synth.cancel();
-      }
-    };
-  }, [text]);
-
-  const toggleSpeech = () => {
-    if (!supported) {
-      toast({
-        variant: "destructive",
-        title: "Speech synthesis not supported",
-        description: "Your browser doesn't support text-to-speech functionality.",
-      });
-      return;
-    }
-
-    const synth = window.speechSynthesis;
-    
-    if (speaking) {
-      synth.cancel();
-      setSpeaking(false);
-    } else {
-      if (utterance) {
-        synth.speak(utterance);
-        setSpeaking(true);
-      }
+      
+      // Handle errors
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+      
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
     }
   };
-
-  if (!supported) {
-    return (
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-2 opacity-50 cursor-not-allowed"
-        disabled
-      >
-        <VolumeIcon size={16} />
-        <span className="hidden md:inline">Read Aloud</span>
-      </Button>
-    );
-  }
-
+  
   return (
-    <Button 
-      variant="outline" 
-      size="sm" 
-      className="flex items-center gap-2"
-      onClick={toggleSpeech}
+    <button
+      onClick={speak}
+      className="relative flex items-center justify-center rounded-full w-8 h-8 bg-primary bg-opacity-10 hover:bg-opacity-20 transition-all duration-200"
+      aria-label={isSpeaking ? "Stop Text to Speech" : "Listen to Text"}
+      title={isSpeaking ? "Stop Text to Speech" : "Listen to Text"}
     >
-      {speaking ? (
-        <>
-          <PauseIcon size={16} />
-          <span className="hidden md:inline">Stop Reading</span>
-        </>
+      {isSpeaking ? (
+        <Pause className="w-4 h-4 text-primary" />
       ) : (
-        <>
-          <Volume2Icon size={16} />
-          <span className="hidden md:inline">Read Aloud</span>
-        </>
+        <Volume2 className="w-4 h-4 text-primary" />
       )}
-    </Button>
+      
+      {/* Animation waves when speaking */}
+      {isSpeaking && (
+        <span className="absolute inset-0 rounded-full animate-ping opacity-30 bg-primary pointer-events-none"></span>
+      )}
+    </button>
   );
 }
