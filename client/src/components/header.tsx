@@ -1,33 +1,52 @@
-import { ThemeToggle } from "./ui/theme-toggle";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Dna } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="relative z-10">
-      <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-        <Link href="/">
-          <div className="flex items-center cursor-pointer">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[hsl(var(--neon-blue))] to-[hsl(var(--neon-pink))] flex items-center justify-center mr-3">
-              <i className="ri-heart-pulse-line text-xl"></i>
-            </div>
-            <div>
-              <h1 className="font-poppins font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--neon-blue))] to-[hsl(var(--neon-pink))]">BioPredict</h1>
-              <p className="text-xs opacity-70">Early Disease Detection System</p>
-            </div>
-          </div>
-        </Link>
+    <header className="bg-background sticky top-0 z-40 w-full border-b shadow-sm">
+      <div className="container flex h-16 items-center justify-between py-4">
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <span className="flex items-center space-x-2 cursor-pointer">
+              <Dna className="h-6 w-6 text-primary" />
+              <span className="font-poppins font-bold text-xl">BioPredict</span>
+            </span>
+          </Link>
+        </div>
         
-        <nav className="mt-4 md:mt-0">
-          <ul className="flex items-center space-x-6">
-            <li><Link href="/"><a className="hover:text-[hsl(var(--neon-blue))] transition-colors">Home</a></Link></li>
-            <li><a href="#about" className="hover:text-[hsl(var(--neon-blue))] transition-colors">About</a></li>
-            <li><a href="#research" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Research</a></li>
-            <li><a href="#contact" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Contact</a></li>
+        <nav className="hidden md:flex items-center gap-6">
+          <ul className="flex space-x-8">
             <li>
-              <ThemeToggle />
+              <Link href="/">
+                <span className="text-foreground/70 hover:text-foreground transition-colors cursor-pointer">Home</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/#fluid-section">
+                <span className="text-foreground/70 hover:text-foreground transition-colors cursor-pointer">Analysis</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/about">
+                <span className="text-foreground/70 hover:text-foreground transition-colors cursor-pointer">About</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/#research-section">
+                <span className="text-foreground/70 hover:text-foreground transition-colors cursor-pointer">Research</span>
+              </Link>
             </li>
           </ul>
         </nav>
+        
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link href="/#fluid-section">
+            <Button>Get Started</Button>
+          </Link>
+        </div>
       </div>
     </header>
   );

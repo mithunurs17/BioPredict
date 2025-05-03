@@ -6,6 +6,7 @@ import { MessageCircleIcon, SendIcon, XIcon, LoaderIcon } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AnimatePresence, motion } from 'framer-motion';
+import { toast } from '@/hooks/use-toast';
 
 interface Message {
   role: 'user' | 'assistant';

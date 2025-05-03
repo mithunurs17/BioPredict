@@ -49,8 +49,12 @@ export async function handleChatMessage(req: Request, res: Response) {
     });
     
     // Extract and return the response
+    const responseText = response.content[0].type === 'text' 
+      ? response.content[0].text 
+      : "I'm sorry, I couldn't process your request properly.";
+      
     return res.status(200).json({
-      response: response.content[0].text
+      response: responseText
     });
     
   } catch (error) {

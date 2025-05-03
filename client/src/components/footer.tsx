@@ -1,67 +1,124 @@
 import { Link } from "wouter";
+import { Dna } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="py-10 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[hsl(var(--neon-blue))] to-[hsl(var(--neon-pink))] flex items-center justify-center mr-3">
-                <i className="ri-heart-pulse-line text-lg"></i>
-              </div>
-              <h3 className="font-poppins font-bold text-xl">BioPredict</h3>
-            </div>
-            <p className="text-sm opacity-70 mb-4">
-              Leveraging machine learning and biomarker analysis for early disease detection and preventive healthcare.
-            </p>
-            <div className="flex space-x-4">
-              <a href="#" className="w-8 h-8 rounded-full bg-card flex items-center justify-center hover:bg-muted transition-colors">
-                <i className="ri-twitter-x-line text-sm"></i>
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-card flex items-center justify-center hover:bg-muted transition-colors">
-                <i className="ri-linkedin-fill text-sm"></i>
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-card flex items-center justify-center hover:bg-muted transition-colors">
-                <i className="ri-github-fill text-sm"></i>
-              </a>
-            </div>
+    <footer className="bg-muted py-12 border-t">
+      <div className="container grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="flex flex-col justify-center md:justify-start">
+          <div className="flex items-center gap-2 mb-4">
+            <Dna className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">BioPredict</span>
           </div>
-          
-          <div>
-            <h4 className="font-medium mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Research Papers</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Methodology</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Data Privacy</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">API Documentation</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-medium mb-4">Company</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Team</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Contact</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-medium mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Data Processing</a></li>
-              <li><a href="#" className="hover:text-[hsl(var(--neon-blue))] transition-colors">Compliance</a></li>
-            </ul>
-          </div>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Empowering personalized health insights through advanced biomarker analysis and machine learning.
+          </p>
         </div>
         
-        <div className="mt-10 pt-6 border-t border-[hsl(var(--border))] text-center text-sm opacity-70">
-          <p>© {new Date().getFullYear()} BioPredict. All rights reserved. For research and educational purposes only.</p>
+        <div className="grid grid-cols-2 gap-8 md:col-span-2 md:grid-cols-3">
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">Navigate</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Home
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/about">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    About
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/#fluid-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Analysis
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/#research-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Research
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">Body Fluids</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/#blood-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Blood Analysis
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/#saliva-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Saliva Analysis
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/#urine-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Urine Analysis
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/#csf-section">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    CSF Analysis
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">Legal</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Privacy Policy
+                </span>
+              </li>
+              <li>
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Terms of Service
+                </span>
+              </li>
+              <li>
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Data Usage
+                </span>
+              </li>
+              <li>
+                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Contact
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
+      </div>
+      
+      <div className="container mt-8 pt-8 border-t border-muted-foreground/20">
+        <p className="text-xs text-center text-muted-foreground">
+          &copy; {new Date().getFullYear()} BioPredict. All rights reserved. 
+          <span className="block mt-1 md:inline md:ml-1">
+            This is a demonstration application. Not for medical use.
+          </span>
+        </p>
       </div>
     </footer>
   );
