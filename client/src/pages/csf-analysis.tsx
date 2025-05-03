@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, FileUploadIcon, AlertTriangle } from 'lucide-react';
+import { Loader2, FileUp, AlertTriangle } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { CSFBiomarkerFormSchema, type CSFBiomarkerForm, type CSFPredictionResponse } from '@/types';
@@ -130,7 +130,7 @@ export default function CSFAnalysisPage() {
                     htmlFor="report-upload" 
                     className="block w-full cursor-pointer border-2 border-dashed border-primary/20 rounded-lg p-8 text-center hover:border-primary/40 transition-colors"
                   >
-                    <FileUploadIcon className="h-10 w-10 mx-auto mb-4 text-primary/50" />
+                    <FileUp className="h-10 w-10 mx-auto mb-4 text-primary/50" />
                     <p className="mb-2 font-semibold">Upload Lab Report (Optional)</p>
                     <p className="text-sm text-muted-foreground mb-2">
                       PDF, JPG, or PNG formats accepted
