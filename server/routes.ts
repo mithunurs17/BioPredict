@@ -6,6 +6,7 @@ import { predictBlood } from "./controllers/prediction";
 import { predictSaliva } from "./controllers/prediction";
 import { predictUrine } from "./controllers/prediction";
 import { predictCSF } from "./controllers/prediction";
+import { handleChatMessage } from "./controllers/chat";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Prediction API endpoints
@@ -13,6 +14,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/predict/saliva', predictSaliva);
   app.post('/api/predict/urine', predictUrine);
   app.post('/api/predict/csf', predictCSF);
+
+  // AI Chatbot endpoint
+  app.post('/api/chat', handleChatMessage);
 
   // Get historical predictions for a user (if authentication is implemented)
   app.get('/api/history', async (req, res) => {
