@@ -368,17 +368,46 @@ export default function BloodAnalysisPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <h3 className="font-semibold">Contributing Factors:</h3>
-                    <ul className="space-y-2">
-                      {predictionResults.factors?.map((factor, index) => (
-                        <li key={index} className="flex items-center">
-                          <span className={`h-2 w-2 rounded-full mr-2 ${
-                            factor.startsWith("Normal") ? "bg-green-500" : "bg-red-500"
-                          }`} />
-                          <span>{factor}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Risk Assessment</h3>
+                      <div className="pl-4 space-y-2">
+                        <div>Risk Level: <span className="text-muted-foreground">{predictionResults.riskLevel}</span></div>
+                        <div>Risk Value: <span className="text-muted-foreground">{predictionResults.riskValue}%</span></div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Potential Health Conditions</h3>
+                      <div className="pl-4">
+                        {predictionResults.potentialDiseases && predictionResults.potentialDiseases.length > 0 ? (
+                          <ul className="list-disc list-inside space-y-1">
+                            {predictionResults.potentialDiseases.map((disease, index) => (
+                              <li key={index} className="text-muted-foreground">{disease}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted-foreground">No specific health conditions detected</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Contributing Factors</h3>
+                      <ul className="pl-4 space-y-2">
+                        {predictionResults.factors?.map((factor, index) => (
+                          <li key={index} className="flex items-center">
+                            <span className={`h-2 w-2 rounded-full mr-2 ${
+                              factor.includes("Normal") || factor.includes("healthy") 
+                                ? "bg-green-500" 
+                                : factor.includes("slightly") 
+                                  ? "bg-yellow-500" 
+                                  : "bg-red-500"
+                            }`} />
+                            <span className="text-muted-foreground">{factor}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
                     <div className="mt-6">
                       <h3 className="font-semibold mb-2">Recommendation:</h3>
