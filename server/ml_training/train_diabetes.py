@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -8,22 +9,18 @@ import joblib
 import os
 
 def train_diabetes_model():
-    # Load the dataset with absolute path
-    data_path = r"C:\Users\Mithun Raj Urs TV\Desktop\Body_Fluid_Marker\DiseasePredictorAI\DiseasePredictorAI\diabetes_data.csv"
+    # Load the dataset
     try:
-        df = pd.read_csv(data_path)
-        print(f"Successfully loaded data from: {data_path}")
-    except FileNotFoundError:
-        print(f"Error: Could not find the file at {data_path}")
-        return
+        df = pd.read_csv('diabetes_data.csv')
+        print("Successfully loaded data")
     except Exception as e:
         print(f"Error loading the file: {str(e)}")
         return
 
-    # Define features (biomarkers) and target
-    features = ['BMI', 'Chol', 'TG', 'HDL', 'LDL', 'Cr', 'BUN']  # Using available biomarkers
+    # Define features and target
+    features = ['BMI', 'Chol', 'TG', 'HDL', 'LDL', 'Cr', 'BUN']
     X = df[features]
-    y = df['Diagnosis']  # Binary classification: 0 for no diabetes, 1 for diabetes
+    y = df['Diagnosis']  # Assuming 'Diagnosis' is your target column
 
     # Split the data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -60,4 +57,4 @@ def train_diabetes_model():
     print(f"Scaler saved to: {scaler_path}")
 
 if __name__ == "__main__":
-    train_diabetes_model() 
+    train_diabetes_model()
