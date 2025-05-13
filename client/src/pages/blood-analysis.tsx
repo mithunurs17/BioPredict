@@ -371,8 +371,42 @@ export default function BloodAnalysisPage() {
                     <div className="mb-6">
                       <h3 className="font-semibold mb-2">Risk Assessment</h3>
                       <div className="pl-4 space-y-2">
-                        <div>Risk Level: <span className="text-muted-foreground">{predictionResults.riskLevel}</span></div>
-                        <div>Risk Value: <span className="text-muted-foreground">{predictionResults.riskValue}%</span></div>
+                        <div>Risk Level: <span className={`font-semibold ${
+                          predictionResults.riskLevel === "Low" ? "text-green-600" :
+                          predictionResults.riskLevel === "Moderate" ? "text-yellow-600" :
+                          "text-red-600"
+                        }`}>{predictionResults.riskLevel}</span></div>
+                        <div>Risk Value: <span className="font-semibold">{predictionResults.riskValue}%</span></div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Identified Conditions</h3>
+                      <div className="pl-4">
+                        {predictionResults.conditions && predictionResults.conditions.length > 0 ? (
+                          <ul className="list-disc list-inside space-y-2">
+                            {predictionResults.conditions.map((condition, index) => (
+                              <li key={index} className="text-red-600">{condition}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-green-600">No concerning conditions detected</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Recommended Actions</h3>
+                      <div className="pl-4">
+                        {predictionResults.remedies && predictionResults.remedies.length > 0 ? (
+                          <ul className="list-disc list-inside space-y-2">
+                            {predictionResults.remedies.map((remedy, index) => (
+                              <li key={index} className="text-blue-600">{remedy}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted-foreground">Maintain current healthy lifestyle</p>
+                        )}
                       </div>
                     </div>
 

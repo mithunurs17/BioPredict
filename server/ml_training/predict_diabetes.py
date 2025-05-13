@@ -115,6 +115,49 @@ def predict_diabetes(features):
             "biomarkerIssues": biomarker_issues
         }
 
+        # Add specific conditions and remedies based on biomarker values
+        conditions = []
+        remedies = []
+        
+        # BMI Analysis
+        if features['BMI'] > 24:
+            conditions.append("High BMI - Risk factor for diabetes")
+            remedies.append("Regular exercise (30 mins/day), balanced diet with reduced calories")
+        
+        # Cholesterol Analysis
+        if features['Chol'] >= 4.0:
+            conditions.append("Elevated Cholesterol")
+            remedies.append("Limit saturated fats, increase fiber intake, consider statins if prescribed")
+            
+        # Triglycerides Analysis    
+        if features['TG'] >= 1.3:
+            conditions.append("High Triglycerides")
+            remedies.append("Reduce sugar intake, limit alcohol, increase omega-3 rich foods")
+            
+        # HDL Analysis
+        if features['HDL'] < 1.3:
+            conditions.append("Low HDL (Good) Cholesterol")
+            remedies.append("Regular aerobic exercise, quit smoking, maintain healthy weight")
+            
+        # LDL Analysis
+        if features['LDL'] >= 2.0:
+            conditions.append("High LDL (Bad) Cholesterol")
+            remedies.append("Mediterranean diet, limit processed foods, regular exercise")
+            
+        # Kidney Function Analysis
+        if features['Cr'] < 60 or features['Cr'] > 90:
+            conditions.append("Abnormal Creatinine Levels")
+            remedies.append("Stay hydrated, limit protein intake, regular kidney function monitoring")
+            
+        if features['BUN'] < 4.0 or features['BUN'] > 6.5:
+            conditions.append("Abnormal BUN Levels")
+            remedies.append("Monitor protein intake, maintain hydration, regular kidney checkups")
+
+        result.update({
+            "conditions": conditions,
+            "remedies": remedies
+        })
+        
         return result
 
     except Exception as e:
