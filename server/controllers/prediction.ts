@@ -33,14 +33,19 @@ export async function predictBlood(req: Request, res: Response) {
       cardiovascular: cvdPrediction
     };
     
-    // Save prediction to database (optional - if user is authenticated)
-    if (req.session?.userId) {
-      await db.insert(biomarkerRecords).values({
-        userId: req.session.userId,
-        fluidType: "blood",
-        biomarkers: validatedData,
-        predictions
-      });
+    // Save prediction to database (optional - if database is configured and user is authenticated)
+    try {
+      if (req.session?.userId && process.env.DATABASE_URL) {
+        await db.insert(biomarkerRecords).values({
+          userId: req.session.userId,
+          fluidType: "blood",
+          biomarkers: validatedData,
+          predictions
+        });
+      }
+    } catch (dbError) {
+      console.warn("Database save failed:", dbError);
+      // Continue without database save
     }
     
     return res.status(200).json(predictions);

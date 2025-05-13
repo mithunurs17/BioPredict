@@ -30,6 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Get the path to the Python script
     const scriptPath = path.join(process.cwd(), 'server', 'ml_training', 'predict_diabetes.py');
+    console.log('Working directory:', process.cwd());
+    console.log('Script path:', scriptPath);
     console.log('Python script path:', scriptPath);
 
     // Verify Python script exists
@@ -66,7 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       pythonProcess.stderr.on('data', (data) => {
         const chunk = data.toString();
         console.error('Python stderr:', chunk);
-        error += chunk;
+        // Only add actual errors to the error string, not debug prints
+        if (!chunk.includes('Looking for models in:')) {
+          error += chunk;
+        }
       });
 
       // Handle process completion

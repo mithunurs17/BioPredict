@@ -10,8 +10,9 @@ def load_model_and_scaler():
     """Load the trained model and scaler."""
     try:
         # Get the directory of the current script
-        current_dir = Path(__file__).parent
+        current_dir = Path(__file__).parent.resolve()
         models_dir = current_dir / 'models'
+        print(f"Looking for models in: {models_dir}", file=sys.stderr)
         
         # Construct paths to model and scaler files
         model_path = models_dir / 'diabetes_model.joblib'
