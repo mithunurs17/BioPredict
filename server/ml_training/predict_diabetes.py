@@ -18,11 +18,17 @@ def load_model_and_scaler():
 def analyze_biomarkers(features):
     issues = []
     risk_factors = 0
+    risk_details = []
 
     # BMI: 21-24 ideal range
-    if features['BMI'] > 24:
+    if features['BMI'] > 30:
+        issues.append("Very High BMI - Significant risk for diabetes")
+        risk_factors += 2
+        risk_details.append("Obesity (BMI > 30)")
+    elif features['BMI'] > 24:
         issues.append("High BMI may increase insulin resistance")
         risk_factors += 1
+        risk_details.append("Overweight")
     elif features['BMI'] < 21:
         issues.append("Low BMI - monitor nutritional status")
         risk_factors += 1
@@ -72,16 +78,30 @@ def predict_diabetes(features):
 
         biomarker_issues, risk_factors = analyze_biomarkers(features)
         
-        # Adjust risk based on number of risk factors
+        # Calculate comprehensive risk score
         base_risk = int(probability[1] * 100)
-        risk_value = min(100, base_risk + (risk_factors * 10))  # Increase risk by 10% per risk factor
+        risk_multiplier = 1.0
+        
+        # Adjust risk based on multiple factors
+        if features['BMI'] > 30: risk_multiplier += 0.3
+        if features['Chol'] > 5.2: risk_multiplier += 0.2
+        if features['TG'] > 1.7: risk_multiplier += 0.2
+        if features['HDL'] < 1.0: risk_multiplier += 0.2
+        if features['LDL'] > 3.4: risk_multiplier += 0.2
+        
+        risk_value = min(100, int(base_risk * risk_multiplier))
 
-        if risk_value < 30:
+        # Determine risk level with more granularity
+        if risk_value < 20:
+            risk_level = "Minimal"
+        elif risk_value < 40:
             risk_level = "Low"
-        elif risk_value < 70:
+        elif risk_value < 60:
             risk_level = "Moderate"
-        else:
+        elif risk_value < 80:
             risk_level = "High"
+        else:
+            risk_level = "Very High"
 
         factors = []
         if biomarker_issues:
