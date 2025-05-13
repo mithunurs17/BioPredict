@@ -17,31 +17,47 @@ def load_model_and_scaler():
 
 def analyze_biomarkers(features):
     issues = []
+    risk_factors = 0
 
-    if features['BMI'] >= 30:
-        issues.append("High BMI indicates obesity risk")
-    elif features['BMI'] >= 25:
-        issues.append("Elevated BMI suggests overweight condition")
+    # BMI: 21-24 ideal range
+    if features['BMI'] > 24:
+        issues.append("High BMI may increase insulin resistance")
+        risk_factors += 1
+    elif features['BMI'] < 21:
+        issues.append("Low BMI - monitor nutritional status")
+        risk_factors += 1
 
-    if features['Chol'] > 5.2:
-        issues.append("Elevated total cholesterol")
+    # Total Cholesterol: < 4.0 mmol/L target
+    if features['Chol'] >= 4.0:
+        issues.append("Elevated total cholesterol - above target for diabetics")
+        risk_factors += 1
 
-    if features['TG'] > 1.7:
-        issues.append("High triglycerides level")
+    # Triglycerides: < 1.3 mmol/L target
+    if features['TG'] >= 1.3:
+        issues.append("High triglycerides - increased heart disease risk")
+        risk_factors += 1
 
-    if features['HDL'] < 1.0:
-        issues.append("Low HDL cholesterol")
+    # HDL: > 1.3-1.5 mmol/L target
+    if features['HDL'] < 1.3:
+        issues.append("Low HDL cholesterol - reduced protection against heart disease")
+        risk_factors += 1
 
-    if features['LDL'] > 3.4:
-        issues.append("High LDL cholesterol")
+    # LDL: < 2.0 mmol/L target
+    if features['LDL'] >= 2.0:
+        issues.append("High LDL cholesterol - increased cardiovascular risk")
+        risk_factors += 1
 
-    if features['Cr'] > 106:
-        issues.append("Elevated creatinine level")
+    # BUN: 4.0-6.5 mmol/L range
+    if features['BUN'] < 4.0 or features['BUN'] > 6.5:
+        issues.append("Abnormal BUN levels - may indicate kidney function issues")
+        risk_factors += 1
 
-    if features['BUN'] > 7.1:
-        issues.append("High blood urea nitrogen")
+    # Creatinine: 60-90 µmol/L (using average range)
+    if features['Cr'] < 60 or features['Cr'] > 90:
+        issues.append("Abnormal creatinine levels - possible kidney function concern")
+        risk_factors += 1
 
-    return issues
+    return issues, risk_factors
 
 def predict_diabetes(features):
     try:
@@ -54,7 +70,11 @@ def predict_diabetes(features):
         prediction = model.predict(X_scaled)
         probability = model.predict_proba(X_scaled)[0]
 
-        risk_value = int(probability[1] * 100)
+        biomarker_issues, risk_factors = analyze_biomarkers(features)
+        
+        # Adjust risk based on number of risk factors
+        base_risk = int(probability[1] * 100)
+        risk_value = min(100, base_risk + (risk_factors * 10))  # Increase risk by 10% per risk factor
 
         if risk_value < 30:
             risk_level = "Low"
@@ -62,8 +82,6 @@ def predict_diabetes(features):
             risk_level = "Moderate"
         else:
             risk_level = "High"
-
-        biomarker_issues = analyze_biomarkers(features)
 
         factors = []
         if biomarker_issues:
