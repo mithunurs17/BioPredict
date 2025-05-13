@@ -8,14 +8,13 @@ export type FactorType = "positive" | "negative" | "warning";
 
 // Blood Biomarker Form Schema
 export const BloodBiomarkerFormSchema = z.object({
-  glucose: z.number().optional(),
-  hba1c: z.number().optional(),
-  totalCholesterol: z.number().optional(),
-  ldl: z.number().optional(),
-  hdl: z.number().optional(),
-  triglycerides: z.number().optional(),
-  crp: z.number().optional(),
-  homocysteine: z.number().optional()
+  BMI: z.number().min(10).max(50),
+  Chol: z.number().min(1).max(10),
+  TG: z.number().min(0.1).max(5),
+  HDL: z.number().min(0.1).max(5),
+  LDL: z.number().min(0.1).max(5),
+  Cr: z.number().min(10).max(200),
+  BUN: z.number().min(1).max(20)
 });
 
 export type BloodBiomarkerForm = z.infer<typeof BloodBiomarkerFormSchema>;
@@ -74,8 +73,12 @@ export interface DiseasePrediction {
 }
 
 export interface BloodPredictionResponse {
-  diabetes?: DiseasePrediction;
-  cardiovascular?: DiseasePrediction;
+  riskLevel: 'Low' | 'Moderate' | 'High';
+  riskValue: number;
+  factors: string[];
+  recommendation: string;
+  potentialDiseases: string[];
+  biomarkerIssues: string[];
 }
 
 export interface SalivaPredictionResponse {

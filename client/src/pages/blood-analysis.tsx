@@ -24,28 +24,35 @@ export default function BloodAnalysisPage() {
   const form = useForm<BloodBiomarkerForm>({
     resolver: zodResolver(BloodBiomarkerFormSchema),
     defaultValues: {
-      fastingGlucose: 85,
-      hba1c: 5.4,
-      insulinLevel: 5,
-      ldl: 100,
-      hdl: 50,
-      triglycerides: 150,
-      totalCholesterol: 185,
-      systolicBP: 120,
-      diastolicBP: 80,
-      crpLevel: 1,
-      age: 35,
-      weight: 70,
-      height: 170
+      BMI: 24,
+      Chol: 4.2,
+      TG: 0.9,
+      HDL: 2.4,
+      LDL: 1.4,
+      Cr: 46.0,
+      BUN: 4.7
     },
   });
   
   const predictionMutation = useMutation({
     mutationFn: async (data: BloodBiomarkerForm) => {
-      const response = await apiRequest('POST', '/api/predict/blood', data);
-      return response.json();
+      console.log('Sending prediction request with data:', JSON.stringify(data, null, 2));
+      try {
+        const response = await apiRequest('POST', '/api/predict/blood', data);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.details || 'Failed to analyze blood biomarkers');
+        }
+        const result = await response.json();
+        console.log('Received prediction response:', JSON.stringify(result, null, 2));
+        return result;
+      } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+      }
     },
     onSuccess: (data: BloodPredictionResponse) => {
+      console.log('Prediction successful:', JSON.stringify(data, null, 2));
       setPredictionResults(data);
       toast({
         title: "Analysis Complete",
@@ -57,12 +64,14 @@ export default function BloodAnalysisPage() {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Prediction error:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       toast({
         variant: "destructive",
         title: "Analysis Failed",
-        description: "There was an error analyzing your blood biomarkers. Please try again.",
+        description: error.message || "There was an error analyzing your blood biomarkers. Please try again.",
       });
     }
   });
@@ -75,13 +84,13 @@ export default function BloodAnalysisPage() {
       // In a real app, you would parse the file (PDF, CSV, etc.) here
       setTimeout(() => {
         // For demo, set random realistic values
-        form.setValue('fastingGlucose', Math.floor(Math.random() * (150 - 70) + 70));
-        form.setValue('hba1c', Number((Math.random() * (7.0 - 4.5) + 4.5).toFixed(1)));
-        form.setValue('insulinLevel', Math.floor(Math.random() * (15 - 2) + 2));
-        form.setValue('ldl', Math.floor(Math.random() * (200 - 70) + 70));
-        form.setValue('hdl', Math.floor(Math.random() * (80 - 30) + 30));
-        form.setValue('triglycerides', Math.floor(Math.random() * (250 - 50) + 50));
-        form.setValue('totalCholesterol', Math.floor(Math.random() * (250 - 120) + 120));
+        form.setValue('BMI', Math.floor(Math.random() * (30 - 18) + 18));
+        form.setValue('Chol', Number((Math.random() * (6.0 - 3.0) + 3.0).toFixed(1)));
+        form.setValue('TG', Number((Math.random() * (2.0 - 0.5) + 0.5).toFixed(1)));
+        form.setValue('HDL', Number((Math.random() * (3.0 - 1.5) + 1.5).toFixed(1)));
+        form.setValue('LDL', Number((Math.random() * (3.0 - 1.0) + 1.0).toFixed(1)));
+        form.setValue('Cr', Math.floor(Math.random() * (100 - 40) + 40));
+        form.setValue('BUN', Math.floor(Math.random() * (10 - 5) + 5));
         
         toast({
           title: "Report Processed",
@@ -92,6 +101,7 @@ export default function BloodAnalysisPage() {
   };
   
   function onSubmit(data: BloodBiomarkerForm) {
+    console.log('Form submitted with data:', JSON.stringify(data, null, 2));
     predictionMutation.mutate(data);
   }
   
@@ -155,30 +165,12 @@ export default function BloodAnalysisPage() {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                      <div className="col-span-2">
-                        <h3 className="font-semibold mb-2 text-[hsl(var(--blood-primary))]">Diabetes Markers</h3>
-                      </div>
-                      
                       <FormField
                         control={form.control}
-                        name="fastingGlucose"
+                        name="BMI"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Fasting Glucose (mg/dL)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="hba1c"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>HbA1c (%)</FormLabel>
+                            <FormLabel>BMI</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                             </FormControl>
@@ -186,13 +178,12 @@ export default function BloodAnalysisPage() {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={form.control}
-                        name="insulinLevel"
+                        name="Chol"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Insulin Level (μU/mL)</FormLabel>
+                            <FormLabel>Cholesterol (mmol/L)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                             </FormControl>
@@ -200,101 +191,12 @@ export default function BloodAnalysisPage() {
                           </FormItem>
                         )}
                       />
-                      
-                      <div className="col-span-2 mt-4">
-                        <h3 className="font-semibold mb-2 text-[hsl(var(--blood-primary))]">Cardiovascular Markers</h3>
-                      </div>
-                      
                       <FormField
                         control={form.control}
-                        name="ldl"
+                        name="TG"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>LDL Cholesterol (mg/dL)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="hdl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>HDL Cholesterol (mg/dL)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="triglycerides"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Triglycerides (mg/dL)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="totalCholesterol"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Total Cholesterol (mg/dL)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="systolicBP"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Systolic BP (mmHg)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="diastolicBP"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Diastolic BP (mmHg)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="crpLevel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>CRP Level (mg/L)</FormLabel>
+                            <FormLabel>Triglycerides (mmol/L)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                             </FormControl>
@@ -302,31 +204,12 @@ export default function BloodAnalysisPage() {
                           </FormItem>
                         )}
                       />
-                      
-                      <div className="col-span-2 mt-4">
-                        <h3 className="font-semibold mb-2 text-[hsl(var(--blood-primary))]">Personal Information</h3>
-                      </div>
-                      
                       <FormField
                         control={form.control}
-                        name="age"
+                        name="HDL"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Age (years)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="weight"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Weight (kg)</FormLabel>
+                            <FormLabel>HDL (mmol/L)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                             </FormControl>
@@ -334,15 +217,40 @@ export default function BloodAnalysisPage() {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={form.control}
-                        name="height"
+                        name="LDL"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Height (cm)</FormLabel>
+                            <FormLabel>LDL (mmol/L)</FormLabel>
                             <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                              <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="Cr"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Creatinine (μmol/L)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="BUN"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Blood Urea Nitrogen (mmol/L)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -410,31 +318,75 @@ export default function BloodAnalysisPage() {
             <h2 className="text-2xl font-bold mb-6">Your Health Analysis Results</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {predictionResults.diabetes && (
-                <PredictionCard
-                  title="Diabetes Risk Assessment"
-                  riskLevel={predictionResults.diabetes.riskLevel}
-                  riskValue={predictionResults.diabetes.riskValue}
-                  riskColorStart="hsl(var(--blood-primary))"
-                  riskColorEnd="hsl(var(--blood-secondary))"
-                  factors={predictionResults.diabetes.factors}
-                  recommendation={predictionResults.diabetes.recommendation}
-                  fluid="blood"
-                />
-              )}
-              
-              {predictionResults.cardiovascular && (
-                <PredictionCard
-                  title="Cardiovascular Risk Assessment"
-                  riskLevel={predictionResults.cardiovascular.riskLevel}
-                  riskValue={predictionResults.cardiovascular.riskValue}
-                  riskColorStart="hsl(var(--blood-primary))"
-                  riskColorEnd="hsl(var(--blood-secondary))"
-                  factors={predictionResults.cardiovascular.factors}
-                  recommendation={predictionResults.cardiovascular.recommendation}
-                  fluid="blood"
-                />
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Risk Assessment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Risk Level:</span>
+                      <span className={`font-bold ${
+                        predictionResults.riskLevel === "Low" ? "text-green-600" :
+                        predictionResults.riskLevel === "Moderate" ? "text-yellow-600" :
+                        "text-red-600"
+                      }`}>
+                        {predictionResults.riskLevel}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Risk Value:</span>
+                      <span className="font-bold">{predictionResults.riskValue}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Potential Health Conditions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {predictionResults.potentialDiseases && predictionResults.potentialDiseases.length > 0 ? (
+                    <ul className="space-y-2">
+                      {predictionResults.potentialDiseases.map((disease, index) => (
+                        <li key={index} className="flex items-center">
+                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
+                          <span>{disease}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-green-600">No specific health conditions detected</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Biomarker Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Contributing Factors:</h3>
+                    <ul className="space-y-2">
+                      {predictionResults.factors.map((factor, index) => (
+                        <li key={index} className="flex items-center">
+                          <span className={`h-2 w-2 rounded-full mr-2 ${
+                            factor.startsWith("Normal") ? "bg-green-500" : "bg-red-500"
+                          }`} />
+                          <span>{factor}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <div className="mt-6">
+                      <h3 className="font-semibold mb-2">Recommendation:</h3>
+                      <p className="text-muted-foreground">{predictionResults.recommendation}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}

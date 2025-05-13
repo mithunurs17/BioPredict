@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out forwards;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .animate-delay-700 {
+    animation-delay: 700ms;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -181,4 +210,50 @@
 
 .fluid-content.active {
   @apply block;
+}
+
+@keyframes zoom-bg {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-zoom-bg {
+  animation: zoom-bg 7s ease-in-out infinite alternate;
+}
+
+@keyframes meteor {
+  0% {
+    transform: translateX(100vw) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100vw) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes background-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-meteor {
+  animation: meteor linear infinite;
+  animation-duration: 30s;
+}
+
+.animate-background-shift {
+  background-size: 400% 400%;
+  animation: background-shift 15s ease infinite;
 }

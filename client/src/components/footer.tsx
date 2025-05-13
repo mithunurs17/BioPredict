@@ -20,7 +20,7 @@ export function Footer() {
             <h3 className="text-sm font-medium">Navigate</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/">
+                <Link href="/home">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Home
                   </span>
@@ -34,14 +34,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#fluid-section">
+                <Link href="/blood-analysis">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Analysis
                   </span>
                 </Link>
               </li>
               <li>
-                <Link href="/#research-section">
+                <Link href="/research">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Research
                   </span>
@@ -54,28 +54,28 @@ export function Footer() {
             <h3 className="text-sm font-medium">Body Fluids</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/#blood-section">
+                <Link href="/blood-analysis">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Blood Analysis
                   </span>
                 </Link>
               </li>
               <li>
-                <Link href="/#saliva-section">
+                <Link href="/saliva-analysis">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Saliva Analysis
                   </span>
                 </Link>
               </li>
               <li>
-                <Link href="/#urine-section">
+                <Link href="/urine-analysis">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     Urine Analysis
                   </span>
                 </Link>
               </li>
               <li>
-                <Link href="/#csf-section">
+                <Link href="/csf-analysis">
                   <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     CSF Analysis
                   </span>
@@ -88,24 +88,32 @@ export function Footer() {
             <h3 className="text-sm font-medium">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  Privacy Policy
-                </span>
+                <Link href="/privacy-policy">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Privacy Policy
+                  </span>
+                </Link>
               </li>
               <li>
-                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  Terms of Service
-                </span>
+                <Link href="/terms-of-service">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Terms of Service
+                  </span>
+                </Link>
               </li>
               <li>
-                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  Data Usage
-                </span>
+                <Link href="/data-usage">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Data Usage
+                  </span>
+                </Link>
               </li>
               <li>
-                <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  Contact
-                </span>
+                <Link href="/contact">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    Contact
+                  </span>
+                </Link>
               </li>
             </ul>
           </div>
