@@ -72,7 +72,7 @@ function Router() {
       transition: {
         type: 'tween',
         ease: 'easeInOut',
-        duration: 0.4
+        duration: 0.8
       }
     },
     about: {
@@ -99,7 +99,7 @@ function Router() {
       transition: {
         type: 'tween',
         ease: 'easeInOut',
-        duration: 0.4
+        duration: 0.8
       }
     },
     research: {

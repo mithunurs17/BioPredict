@@ -115,7 +115,7 @@ export default function BloodAnalysisPage() {
   return (
     <>
       <Header />
-      <main className="container py-10 px-4 md:px-6">
+      <main className="container py-10 px-4 md:px-6 transition-all duration-500 ease-in-out">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-[hsl(var(--blood-primary))]">Blood Analysis</h1>
