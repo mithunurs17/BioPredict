@@ -20,7 +20,7 @@ import { toast } from '@/hooks/use-toast';
 export default function BloodAnalysisPage() {
   const [predictionResults, setPredictionResults] = useState<BloodPredictionResponse | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  
+
   const form = useForm<BloodBiomarkerForm>({
     resolver: zodResolver(BloodBiomarkerFormSchema),
     defaultValues: {
@@ -33,7 +33,7 @@ export default function BloodAnalysisPage() {
       BUN: 4.7
     },
   });
-  
+
   const predictionMutation = useMutation({
     mutationFn: async (data: BloodBiomarkerForm) => {
       console.log('Sending prediction request with data:', JSON.stringify(data, null, 2));
@@ -58,7 +58,7 @@ export default function BloodAnalysisPage() {
         title: "Analysis Complete",
         description: "Your blood biomarkers have been analyzed successfully.",
       });
-      
+
       // Scroll to results
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -75,11 +75,11 @@ export default function BloodAnalysisPage() {
       });
     }
   });
-  
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setUploadedFile(e.target.files[0]);
-      
+
       // Simulate parsing the file and extracting values
       // In a real app, you would parse the file (PDF, CSV, etc.) here
       setTimeout(() => {
@@ -91,7 +91,7 @@ export default function BloodAnalysisPage() {
         form.setValue('LDL', Number((Math.random() * (3.0 - 1.0) + 1.0).toFixed(1)));
         form.setValue('Cr', Math.floor(Math.random() * (100 - 40) + 40));
         form.setValue('BUN', Math.floor(Math.random() * (10 - 5) + 5));
-        
+
         toast({
           title: "Report Processed",
           description: "Blood report data has been extracted and filled in the form. You can adjust any values if needed.",
@@ -99,12 +99,12 @@ export default function BloodAnalysisPage() {
       }, 1500);
     }
   };
-  
+
   function onSubmit(data: BloodBiomarkerForm) {
     console.log('Form submitted with data:', JSON.stringify(data, null, 2));
     predictionMutation.mutate(data);
   }
-  
+
   // For text-to-speech
   const pageContent = `
     Blood Biomarker Analysis. Upload your lab report or enter your blood biomarker values manually.
@@ -126,7 +126,7 @@ export default function BloodAnalysisPage() {
           </div>
           <TextToSpeech text={pageContent} />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
           <Card className="md:col-span-2">
             <CardHeader>
@@ -161,7 +161,7 @@ export default function BloodAnalysisPage() {
                     />
                   </label>
                 </div>
-                
+
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -257,7 +257,7 @@ export default function BloodAnalysisPage() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="pt-4">
                       <Button 
                         type="submit" 
@@ -278,7 +278,7 @@ export default function BloodAnalysisPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -312,11 +312,11 @@ export default function BloodAnalysisPage() {
             </Card>
           </div>
         </div>
-        
+
         {predictionResults && (
           <div id="results-section" className="mt-10 pt-6 border-t">
             <h2 className="text-2xl font-bold mb-6">Your Health Analysis Results</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card>
                 <CardHeader>
@@ -370,7 +370,7 @@ export default function BloodAnalysisPage() {
                   <div className="space-y-4">
                     <h3 className="font-semibold">Contributing Factors:</h3>
                     <ul className="space-y-2">
-                      {predictionResults.factors.map((factor, index) => (
+                      {predictionResults.factors?.map((factor, index) => (
                         <li key={index} className="flex items-center">
                           <span className={`h-2 w-2 rounded-full mr-2 ${
                             factor.startsWith("Normal") ? "bg-green-500" : "bg-red-500"
@@ -379,7 +379,7 @@ export default function BloodAnalysisPage() {
                         </li>
                       ))}
                     </ul>
-                    
+
                     <div className="mt-6">
                       <h3 className="font-semibold mb-2">Recommendation:</h3>
                       <p className="text-muted-foreground">{predictionResults.recommendation}</p>
