@@ -170,9 +170,34 @@ export default function BloodAnalysisPage() {
                         name="BMI"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>BMI</FormLabel>
+                            <FormLabel className="flex items-center justify-between">
+                              BMI
+                              <span className="text-xs text-muted-foreground">
+                                Normal range: 18.5-24.9
+                              </span>
+                            </FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                              <div className="relative">
+                                <Input 
+                                  type="number" 
+                                  step="0.1" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    field.onChange(value);
+                                    // Add visual feedback based on value
+                                    const input = e.target as HTMLInputElement;
+                                    if (value >= 18.5 && value <= 24.9) {
+                                      input.className = input.className + ' border-green-500';
+                                    } else if (value < 18.5) {
+                                      input.className = input.className + ' border-yellow-500';
+                                    } else {
+                                      input.className = input.className + ' border-red-500';
+                                    }
+                                  }}
+                                  placeholder="Enter BMI value"
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>

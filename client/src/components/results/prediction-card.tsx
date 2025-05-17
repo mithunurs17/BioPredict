@@ -128,21 +128,87 @@ export function PredictionCard({
         <Separator className="my-6" />
         
         <div className="space-y-6">
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Key Factors</h3>
-            <ul className="space-y-3">
-              {factors.map((factor, index) => (
-                <li key={index} className="flex gap-3">
-                  {getFactorIcon(factor.type)}
-                  <span className="text-sm">{factor.text}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-card/50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-lg mb-3">Risk Assessment</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Risk Level:</span>
+                  <span className={`font-medium ${
+                    riskLevel === "Minimal" ? "text-green-500" :
+                    riskLevel === "Low" ? "text-blue-500" :
+                    riskLevel === "Moderate" ? "text-yellow-500" :
+                    riskLevel === "High" ? "text-orange-500" :
+                    "text-red-500"
+                  }`}>{riskLevel}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Risk Value:</span>
+                  <span className="font-medium">{riskValue}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card/50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-lg mb-3">Health Status</h3>
+              <div className="space-y-2">
+                {factors.map((factor, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    {getFactorIcon(factor.type)}
+                    <span className="text-sm">{factor.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card/50 p-4 rounded-lg border">
+            <h3 className="font-semibold text-lg mb-3">Recommended Actions</h3>
+            <ul className="space-y-2">
+              {Array.isArray(recommendation) ? 
+                recommendation.map((rec, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">{rec}</span>
+                  </li>
+                )) : 
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">{recommendation}</span>
                 </li>
-              ))}
+              }
             </ul>
           </div>
-          
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Personalized Recommendation</h3>
-            <p className="text-sm text-muted-foreground">{recommendation}</p>
+
+          <div className="bg-card/50 p-4 rounded-lg border">
+            <h3 className="font-semibold text-lg mb-3">Biomarker Analysis</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Key Findings</h4>
+                <ul className="space-y-2">
+                  {factors.map((factor, index) => (
+                    <li key={index} className="flex items-center gap-2 text-sm">
+                      {getFactorIcon(factor.type)}
+                      <span>{factor.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {potentialDiseases && potentialDiseases.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Potential Health Conditions</h4>
+                  <ul className="space-y-2">
+                    {potentialDiseases.map((disease, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm">{disease}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
           
           <Button 
