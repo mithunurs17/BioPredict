@@ -91,7 +91,16 @@ def predict_diabetes(features):
         
         risk_value = min(100, int(base_risk * risk_multiplier))
 
-        # Determine risk level with more granularity
+        # Show all risk levels with their ranges
+        risk_levels = {
+            "Minimal": "0-20%",
+            "Low": "21-40%",
+            "Moderate": "41-60%",
+            "High": "61-80%",
+            "Very High": "81-100%"
+        }
+
+        # Determine current risk level
         if risk_value < 20:
             risk_level = "Minimal"
         elif risk_value < 40:
@@ -102,6 +111,50 @@ def predict_diabetes(features):
             risk_level = "High"
         else:
             risk_level = "Very High"
+
+        # Generate comprehensive recommendations for all risk levels
+        standard_recommendations = {
+            "Minimal": [
+                "Maintain current healthy lifestyle habits",
+                "Annual health check-ups with primary care physician",
+                "Regular exercise (150 minutes/week of moderate activity)",
+                "Balanced diet rich in whole grains and vegetables",
+                "Adequate sleep (7-9 hours/night)",
+                "Stress management through relaxation techniques"
+            ],
+            "Low": [
+                "Increase physical activity to 180 minutes/week",
+                "Monitor blood sugar levels every 6 months",
+                "Reduce processed food intake",
+                "Consider consulting with a nutritionist",
+                "Join a wellness program or fitness group",
+                "Regular blood pressure monitoring"
+            ],
+            "Moderate": [
+                "Schedule quarterly check-ups with healthcare provider",
+                "Consider glucose tolerance testing",
+                "Implement a structured exercise program",
+                "Consult with a diabetes educator",
+                "Monitor blood sugar levels monthly",
+                "Weight management program if BMI is elevated"
+            ],
+            "High": [
+                "Immediate consultation with an endocrinologist",
+                "Weekly blood glucose monitoring",
+                "Strict dietary modifications",
+                "Supervised exercise program",
+                "Stress reduction therapy",
+                "Consider medication options with healthcare provider"
+            ],
+            "Very High": [
+                "Urgent endocrinologist consultation",
+                "Daily blood glucose monitoring",
+                "Comprehensive diabetes management plan",
+                "Medical nutrition therapy",
+                "Regular cardiovascular assessment",
+                "Consider insulin resistance testing"
+            ]
+        }
 
         factors = []
         if biomarker_issues:
@@ -127,12 +180,25 @@ def predict_diabetes(features):
             potential_diseases.append("Kidney Function Impairment")
 
         result = {
-            "riskLevel": risk_level,
+            "currentRiskLevel": risk_level,
             "riskValue": risk_value,
+            "allRiskLevels": risk_levels,
             "factors": factors,
-            "recommendation": recommendation,
+            "recommendations": {
+                "current": standard_recommendations[risk_level],
+                "allLevels": standard_recommendations
+            },
             "potentialDiseases": potential_diseases,
-            "biomarkerIssues": biomarker_issues
+            "biomarkerIssues": biomarker_issues,
+            "standardGuidelines": {
+                "BMI": "Normal range: 18.5-24.9",
+                "Cholesterol": "Target: < 4.0 mmol/L",
+                "Triglycerides": "Target: < 1.3 mmol/L",
+                "HDL": "Target: > 1.3-1.5 mmol/L",
+                "LDL": "Target: < 2.0 mmol/L",
+                "BUN": "Normal range: 4.0-6.5 mmol/L",
+                "Creatinine": "Normal range: 60-90 µmol/L"
+            }
         }
 
         # Add specific conditions and remedies based on biomarker values
