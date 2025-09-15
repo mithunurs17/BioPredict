@@ -1,225 +1,241 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GaugeChart } from "./gauge-chart";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { toast } from "@/hooks/use-toast";
+import { CheckCircleIcon, ExclamationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { clsx } from 'clsx';
+import { formatDistanceToNow } from 'date-fns';
 
-interface FactorItem {
-  type: "positive" | "negative" | "warning";
-  text: string;
-}
-
-interface PredictionCardProps {
-  title: string;
-  riskLevel: string;
-  riskValue: number;
-  riskColorStart: string;
-  riskColorEnd: string;
-  factors: FactorItem[];
-  recommendation: string;
-  fluid: "blood" | "saliva" | "urine" | "csf";
-}
-
-export function PredictionCard({
-  title,
-  riskLevel,
-  riskValue,
-  riskColorStart,
-  riskColorEnd,
-  factors,
-  recommendation,
-  fluid
-}: PredictionCardProps) {
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  
-  // Get icon for factor type
-  const getFactorIcon = (type: string) => {
-    switch (type) {
-      case "positive":
-        return <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />;
-      case "negative":
-        return <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />;
-      case "warning":
-        return <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />;
-      default:
-        return null;
-    }
+type PredictionCardProps = {
+  record?: {
+    id: string;
+    fluidType: string;
+    biomarkers: any;
+    predictions: any;
+    createdAt: string;
   };
-  
-  // Get background color for risk level
-  const getRiskBackgroundColor = (level: string) => {
+  title?: string;
+  riskLevel?: string;
+  riskValue?: number;
+  riskColorStart?: string;
+  riskColorEnd?: string;
+  factors?: Array<{ type: 'positive' | 'negative' | 'warning', text: string }> | string;
+  recommendation?: string;
+  fluid?: string;
+  potentialDiseases?: string[] | string;
+  showFluidType?: boolean;
+};
+
+const getPredictionData = (props: PredictionCardProps) => {
+  if (props.record) {
+    const { record } = props;
+    const fluidType = record.fluidType;
+    let predictionData: any = {};
+    let title = 'Analysis';
+
+    // Determine which prediction to use based on fluid type
+    if (fluidType === 'blood') {
+      if (record.predictions.diabetes) {
+        predictionData = record.predictions.diabetes;
+        title = 'Diabetes Risk Assessment';
+      } else if (record.predictions.cardiovascular) {
+        predictionData = record.predictions.cardiovascular;
+        title = 'Cardiovascular Disease Risk Assessment';
+      }
+    } else if (fluidType === 'saliva') {
+      predictionData = record.predictions.oralCancer;
+      title = 'Oral Cancer Risk Assessment';
+    } else if (fluidType === 'urine') {
+      if (record.predictions.kidney) {
+        predictionData = record.predictions.kidney;
+        title = 'Kidney Disease Risk Assessment';
+      } else if (record.predictions.diabetes) {
+        predictionData = record.predictions.diabetes;
+        title = 'Diabetes Risk Assessment';
+      }
+    } else if (fluidType === 'csf') {
+      if (record.predictions.alzheimer) {
+        predictionData = record.predictions.alzheimer;
+        title = 'Alzheimer\'s Disease Risk Assessment';
+      } else if (record.predictions.brainTumor) {
+        predictionData = record.predictions.brainTumor;
+        title = 'Brain Tumor Risk Assessment';
+      }
+    }
+
+    const factors = typeof predictionData.factors === 'string' 
+      ? JSON.parse(predictionData.factors) 
+      : predictionData.factors;
+
+    const potentialDiseases = typeof predictionData.potentialDiseases === 'string'
+      ? JSON.parse(predictionData.potentialDiseases)
+      : predictionData.potentialDiseases;
+
+    return {
+      title,
+      riskLevel: predictionData.riskLevel,
+      riskValue: predictionData.riskValue,
+      riskColorStart: '#4ade80', // Example color
+      riskColorEnd: '#16a34a', // Example color
+      factors: factors,
+      recommendation: predictionData.recommendation,
+      fluid: fluidType,
+      potentialDiseases: potentialDiseases,
+      createdAt: record.createdAt,
+    };
+  } else {
+    const factors = typeof props.factors === 'string' 
+      ? JSON.parse(props.factors) 
+      : props.factors;
+
+    const potentialDiseases = typeof props.potentialDiseases === 'string'
+      ? JSON.parse(props.potentialDiseases)
+      : props.potentialDiseases;
+
+    return {
+      title: props.title,
+      riskLevel: props.riskLevel,
+      riskValue: props.riskValue,
+      riskColorStart: props.riskColorStart,
+      riskColorEnd: props.riskColorEnd,
+      factors: factors,
+      recommendation: props.recommendation,
+      fluid: props.fluid,
+      potentialDiseases: potentialDiseases,
+      createdAt: new Date().toISOString(), // Fallback for direct props
+    };
+  }
+};
+
+export function PredictionCard(props: PredictionCardProps) {
+  const data = getPredictionData(props);
+
+  if (!data || !data.riskLevel) {
+    return null; // Don't render if no valid data
+  }
+
+  const { 
+    title,
+    riskLevel,
+    riskValue,
+    factors,
+    recommendation,
+    fluid,
+    potentialDiseases,
+    createdAt
+  } = data;
+
+  // Determine risk level color
+  const getRiskLevelColor = (level: string) => {
     switch (level.toLowerCase()) {
-      case "low":
-        return "bg-green-500/10 text-green-700 dark:text-green-400";
-      case "moderate":
-        return "bg-amber-500/10 text-amber-700 dark:text-amber-400";
-      case "high":
-        return "bg-red-500/10 text-red-700 dark:text-red-400";
-      case "very high":
-        return "bg-red-600/10 text-red-700 dark:text-red-400";
+      case 'minimal':
+        return 'text-green-500';
+      case 'low':
+        return 'text-green-400';
+      case 'moderate':
+        return 'text-yellow-500';
+      case 'high':
+        return 'text-orange-500';
+      case 'very high':
+        return 'text-red-500';
       default:
-        return "bg-blue-500/10 text-blue-700 dark:text-blue-400";
+        return 'text-white';
     }
   };
-  
-  // Handle downloading PDF report
-  const handleDownloadPDF = () => {
-    setIsGeneratingReport(true);
-    
-    // Simulate report generation (would be a backend call in real app)
-    setTimeout(() => {
-      setIsGeneratingReport(false);
-      toast({
-        title: "Report Generated",
-        description: "Your personalized health report has been downloaded.",
-      });
-      
-      // Create a dummy PDF download for demo purposes
-      const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(`
-        BioPredict Health Report
-        
-        Analysis Type: ${title}
-        Risk Level: ${riskLevel} (${riskValue}%)
-        
-        Key Factors:
-        ${factors.map(f => `- ${f.text}`).join('\n')}
-        
-        Personalized Recommendations:
-        ${recommendation}
-        
-        This report is for informational purposes only and does not constitute medical advice.
-        Please consult with a healthcare professional for proper diagnosis and treatment.
-      `));
-      element.setAttribute('download', `biopredict_${fluid}_analysis.txt`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    }, 2000);
+
+  // Determine factor color based on type
+  const getFactorColor = (type: string) => {
+    switch (type) {
+      case 'negative':
+        return 'text-red-500';
+      case 'warning':
+        return 'text-yellow-500';
+      case 'positive':
+        return 'text-green-500';
+      default:
+        return 'text-zinc-300';
+    }
   };
+
+  const riskLevelColor = getRiskLevelColor(riskLevel);
+
+  // Format the date if available
+  const formattedDate = createdAt 
+    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
+    : null;
 
   return (
-    <Card className="overflow-hidden border-2">
-      <CardHeader className={`${getRiskBackgroundColor(riskLevel)} border-b`}>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-center mb-6">
-          <div className="flex-shrink-0">
-            <GaugeChart
-              value={riskValue}
-              colorStart={riskColorStart}
-              colorEnd={riskColorEnd}
-              size="lg"
-            />
-          </div>
-          <div className="flex flex-col justify-center text-center lg:text-left">
-            <h3 className="text-2xl font-bold mb-2">{riskLevel} Risk</h3>
-            <p className="text-muted-foreground">
-              Your risk level is <span className="font-medium">{riskValue}%</span>, which is considered {" "}
-              <span className="font-medium">{riskLevel.toLowerCase()}</span>.
-            </p>
-          </div>
+    <div className="bg-zinc-900 rounded-lg p-6 shadow-lg">
+      <div className="bg-indigo-700/80 px-6 py-3 -mx-6 -mt-6 mb-6 flex items-center justify-between">
+        <h3 className="text-xl font-semibold text-white">{title}</h3>
+        {formattedDate && <span className="text-sm text-indigo-200">{formattedDate}</span>}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="flex flex-col items-center justify-center p-4 bg-zinc-800 rounded-lg">
+          <span className={`text-6xl font-bold mb-2 ${riskLevelColor}`}>{riskValue}%</span>
+          <p className={`text-xl font-medium ${riskLevelColor}`}>{riskLevel} Risk</p>
+          <p className="text-zinc-400 text-sm mt-1">Your risk level is {riskValue}%, which is considered {riskLevel.toLowerCase()}.</p>
         </div>
         
-        <Separator className="my-6" />
-        
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card/50 p-4 rounded-lg border">
-              <h3 className="font-semibold text-lg mb-3">Risk Assessment</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Risk Level:</span>
-                  <span className={`font-medium ${
-                    riskLevel === "Minimal" ? "text-green-500" :
-                    riskLevel === "Low" ? "text-blue-500" :
-                    riskLevel === "Moderate" ? "text-yellow-500" :
-                    riskLevel === "High" ? "text-orange-500" :
-                    "text-red-500"
-                  }`}>{riskLevel}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Risk Value:</span>
-                  <span className="font-medium">{riskValue}%</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card/50 p-4 rounded-lg border">
-              <h3 className="font-semibold text-lg mb-3">Health Status</h3>
-              <div className="space-y-2">
-                {factors.map((factor, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    {getFactorIcon(factor.type)}
-                    <span className="text-sm">{factor.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="p-4 bg-zinc-800 rounded-lg">
+          <h4 className="text-lg font-semibold mb-3 text-white">Risk Assessment</h4>
+          <div className="space-y-1">
+            <p><span className="text-zinc-400">Risk Level:</span> <span className={riskLevelColor}>{riskLevel}</span></p>
+            <p><span className="text-zinc-400">Risk Value:</span> <span className={riskLevelColor}>{riskValue}%</span></p>
           </div>
+        </div>
+      </div>
 
-          <div className="bg-card/50 p-4 rounded-lg border">
-            <h3 className="font-semibold text-lg mb-3">Recommended Actions</h3>
-            <ul className="space-y-2">
-              {Array.isArray(recommendation) ? 
-                recommendation.map((rec, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">{rec}</span>
-                  </li>
-                )) : 
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">{recommendation}</span>
-                </li>
-              }
-            </ul>
-          </div>
+      {factors && factors.length > 0 && (
+        <div className="bg-zinc-800 rounded-lg p-4 mb-6">
+          <h4 className="text-lg font-semibold mb-3 text-white">Health Status</h4>
+          <ul className="space-y-2">
+            {factors.map((factor: any, index: number) => (
+              <li key={index} className="flex items-start">
+                <span className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${getFactorColor(factor.type)}`}>
+                  {factor.type === 'negative' ? (
+                    <ExclamationCircleIcon className="h-5 w-5" />
+                  ) : factor.type === 'warning' ? (
+                    <ExclamationTriangleIcon className="h-5 w-5" />
+                  ) : (
+                    <CheckCircleIcon className="h-5 w-5" />
+                  )}
+                </span>
+                <span className={getFactorColor(factor.type)}>
+                  {factor.text}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-          <div className="bg-card/50 p-4 rounded-lg border">
-            <h3 className="font-semibold text-lg mb-3">Biomarker Analysis</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Key Findings</h4>
-                <ul className="space-y-2">
-                  {factors.map((factor, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      {getFactorIcon(factor.type)}
-                      <span>{factor.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {potentialDiseases && potentialDiseases.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Potential Health Conditions</h4>
-                  <ul className="space-y-2">
-                    {potentialDiseases.map((disease, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        <span className="text-sm">{disease}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+      {potentialDiseases && potentialDiseases.length > 0 && (
+        <div className="bg-zinc-800 rounded-lg p-4 mb-6">
+          <h4 className="text-lg font-semibold mb-3 text-white">Potential Health Concerns</h4>
+          <ul className="space-y-2">
+            {potentialDiseases.map((disease: string, index: number) => (
+              <li key={index} className="flex items-start text-red-400">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                <span>{disease}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {recommendation && (
+        <div className="bg-zinc-800 rounded-lg p-4 mb-6">
+          <h4 className="text-lg font-semibold mb-3 text-white">Recommended Actions</h4>
+          <div className="flex items-start">
+            <span className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${riskLevelColor}`}>
+              {riskLevel.toLowerCase() === 'minimal' || riskLevel.toLowerCase() === 'low' ? (
+                <CheckCircleIcon className="h-5 w-5" />
+              ) : (
+                <ExclamationCircleIcon className="h-5 w-5" />
               )}
-            </div>
+            </span>
+            <p className={riskLevelColor}>{recommendation}</p>
           </div>
-          
-          <Button 
-            onClick={handleDownloadPDF} 
-            disabled={isGeneratingReport}
-            className="w-full"
-          >
-            {isGeneratingReport ? "Generating Report..." : "Download Detailed Report"}
-          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

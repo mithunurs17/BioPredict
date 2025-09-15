@@ -1,4 +1,3 @@
-
 import json
 import sys
 import numpy as np
@@ -22,46 +21,60 @@ def analyze_biomarkers(features):
 
     # BMI: 21-24 ideal range
     if features['BMI'] > 30:
-        issues.append("Very High BMI - Significant risk for diabetes")
+        issues.append({"type": "negative", "text": f"Very High BMI ({features['BMI']}) - Significant risk for diabetes"})
         risk_factors += 2
         risk_details.append("Obesity (BMI > 30)")
     elif features['BMI'] > 24:
-        issues.append("High BMI may increase insulin resistance")
+        issues.append({"type": "warning", "text": f"High BMI ({features['BMI']}) may increase insulin resistance"})
         risk_factors += 1
         risk_details.append("Overweight")
     elif features['BMI'] < 21:
-        issues.append("Low BMI - monitor nutritional status")
+        issues.append({"type": "warning", "text": f"Low BMI ({features['BMI']}) - monitor nutritional status"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Healthy BMI ({features['BMI']})"})
 
     # Total Cholesterol: < 4.0 mmol/L target
     if features['Chol'] >= 4.0:
-        issues.append("Elevated total cholesterol - above target for diabetics")
+        issues.append({"type": "negative", "text": f"Elevated total cholesterol ({features['Chol']} mmol/L) - above target for diabetics"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Healthy total cholesterol ({features['Chol']} mmol/L)"})
 
     # Triglycerides: < 1.3 mmol/L target
     if features['TG'] >= 1.3:
-        issues.append("High triglycerides - increased heart disease risk")
+        issues.append({"type": "negative", "text": f"High triglycerides ({features['TG']} mmol/L) - increased heart disease risk"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Healthy triglyceride levels ({features['TG']} mmol/L)"})
 
     # HDL: > 1.3-1.5 mmol/L target
     if features['HDL'] < 1.3:
-        issues.append("Low HDL cholesterol - reduced protection against heart disease")
+        issues.append({"type": "negative", "text": f"Low HDL cholesterol ({features['HDL']} mmol/L) - reduced protection against heart disease"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Healthy HDL cholesterol ({features['HDL']} mmol/L)"})
 
     # LDL: < 2.0 mmol/L target
     if features['LDL'] >= 2.0:
-        issues.append("High LDL cholesterol - increased cardiovascular risk")
+        issues.append({"type": "negative", "text": f"High LDL cholesterol ({features['LDL']} mmol/L) - increased cardiovascular risk"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Healthy LDL cholesterol ({features['LDL']} mmol/L)"})
 
     # BUN: 4.0-6.5 mmol/L range
     if features['BUN'] < 4.0 or features['BUN'] > 6.5:
-        issues.append("Abnormal BUN levels - may indicate kidney function issues")
+        issues.append({"type": "negative", "text": f"Abnormal BUN levels ({features['BUN']} mmol/L) - may indicate kidney function issues"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Normal BUN levels ({features['BUN']} mmol/L)"})
 
     # Creatinine: 60-90 µmol/L (using average range)
     if features['Cr'] < 60 or features['Cr'] > 90:
-        issues.append("Abnormal creatinine levels - possible kidney function concern")
+        issues.append({"type": "negative", "text": f"Abnormal creatinine levels ({features['Cr']} µmol/L) - possible kidney function concern"})
         risk_factors += 1
+    else:
+        issues.append({"type": "positive", "text": f"Normal creatinine levels ({features['Cr']} µmol/L)"})
 
     return issues, risk_factors
 
@@ -78,97 +91,93 @@ def predict_diabetes(features):
 
         biomarker_issues, risk_factors = analyze_biomarkers(features)
         
-        # Calculate comprehensive risk score
+        # Calculate risk based on individual parameters
+        parameter_risks = []
+        
+        # BMI risk (0-25 points)
+        if features['BMI'] > 30:
+            parameter_risks.append(25)  # Severe obesity
+        elif features['BMI'] > 25:
+            parameter_risks.append(20)  # Overweight
+        elif features['BMI'] < 18.5:
+            parameter_risks.append(15)  # Underweight
+            
+        # Cholesterol risk (0-20 points)
+        if features['Chol'] > 5.2:
+            parameter_risks.append(20)  # Very high cholesterol
+        elif features['Chol'] > 4.0:
+            parameter_risks.append(15)  # High cholesterol
+            
+        # Triglycerides risk (0-20 points)
+        if features['TG'] > 2.0:
+            parameter_risks.append(20)  # Very high triglycerides
+        elif features['TG'] > 1.3:
+            parameter_risks.append(15)  # High triglycerides
+            
+        # HDL risk (0-20 points)
+        if features['HDL'] < 1.0:
+            parameter_risks.append(20)  # Very low HDL
+        elif features['HDL'] < 1.3:
+            parameter_risks.append(15)  # Low HDL
+            
+        # LDL risk (0-20 points)
+        if features['LDL'] > 3.4:
+            parameter_risks.append(20)  # Very high LDL
+        elif features['LDL'] > 2.0:
+            parameter_risks.append(15)  # High LDL
+            
+        # Kidney function risk (0-25 points)
+        if features['Cr'] > 106 or features['BUN'] > 7.1:
+            parameter_risks.append(25)  # Severe kidney impairment
+        elif features['Cr'] > 90 or features['BUN'] > 6.5:
+            parameter_risks.append(20)  # Moderate kidney impairment
+            
+        # Calculate total risk from parameters
+        parameter_risk = sum(parameter_risks)
+        
+        # Add additional risk points for multiple unhealthy parameters
+        unhealthy_count = sum(1 for risk in parameter_risks if risk >= 15)
+        if unhealthy_count >= 3:
+            parameter_risk += 20  # Additional risk for multiple unhealthy parameters
+        
+        # Calculate base risk from model prediction
         base_risk = int(probability[1] * 100)
-        risk_multiplier = 1.0
         
-        # Adjust risk based on multiple factors
-        if features['BMI'] > 30: risk_multiplier += 0.3
-        if features['Chol'] > 5.2: risk_multiplier += 0.2
-        if features['TG'] > 1.7: risk_multiplier += 0.2
-        if features['HDL'] < 1.0: risk_multiplier += 0.2
-        if features['LDL'] > 3.4: risk_multiplier += 0.2
+        # Use the higher of the two risk calculations
+        risk_value = max(base_risk, parameter_risk)
         
-        risk_value = min(100, int(base_risk * risk_multiplier))
+        # Ensure minimum risk value for unhealthy parameters
+        if any(risk >= 20 for risk in parameter_risks):
+            risk_value = max(risk_value, 60)  # Minimum high risk if any parameter is very unhealthy
+        
+        # Ensure risk value is between 0 and 100
+        risk_value = min(100, risk_value)
 
-        # Show all risk levels with their ranges
-        risk_levels = {
-            "Minimal": "0-20%",
-            "Low": "21-40%",
-            "Moderate": "41-60%",
-            "High": "61-80%",
-            "Very High": "81-100%"
-        }
-
-        # Determine current risk level
-        if risk_value < 20:
+        # Determine risk level based on combined risk score
+        if risk_value < 15:
             risk_level = "Minimal"
-        elif risk_value < 40:
+        elif risk_value < 35:
             risk_level = "Low"
-        elif risk_value < 60:
+        elif risk_value < 55:
             risk_level = "Moderate"
-        elif risk_value < 80:
+        elif risk_value < 75:
             risk_level = "High"
         else:
             risk_level = "Very High"
 
-        # Generate comprehensive recommendations for all risk levels
-        standard_recommendations = {
-            "Minimal": [
-                "Maintain current healthy lifestyle habits",
-                "Annual health check-ups with primary care physician",
-                "Regular exercise (150 minutes/week of moderate activity)",
-                "Balanced diet rich in whole grains and vegetables",
-                "Adequate sleep (7-9 hours/night)",
-                "Stress management through relaxation techniques"
-            ],
-            "Low": [
-                "Increase physical activity to 180 minutes/week",
-                "Monitor blood sugar levels every 6 months",
-                "Reduce processed food intake",
-                "Consider consulting with a nutritionist",
-                "Join a wellness program or fitness group",
-                "Regular blood pressure monitoring"
-            ],
-            "Moderate": [
-                "Schedule quarterly check-ups with healthcare provider",
-                "Consider glucose tolerance testing",
-                "Implement a structured exercise program",
-                "Consult with a diabetes educator",
-                "Monitor blood sugar levels monthly",
-                "Weight management program if BMI is elevated"
-            ],
-            "High": [
-                "Immediate consultation with an endocrinologist",
-                "Weekly blood glucose monitoring",
-                "Strict dietary modifications",
-                "Supervised exercise program",
-                "Stress reduction therapy",
-                "Consider medication options with healthcare provider"
-            ],
-            "Very High": [
-                "Urgent endocrinologist consultation",
-                "Daily blood glucose monitoring",
-                "Comprehensive diabetes management plan",
-                "Medical nutrition therapy",
-                "Regular cardiovascular assessment",
-                "Consider insulin resistance testing"
-            ]
-        }
-
-        factors = []
-        if biomarker_issues:
-            factors.extend(biomarker_issues)
-        else:
-            factors.append("All biomarkers within normal range")
-
-        if risk_level == "Low":
+        # Generate recommendations based on risk level
+        if risk_level == "Minimal":
             recommendation = "Continue maintaining your healthy lifestyle with regular check-ups."
+        elif risk_level == "Low":
+            recommendation = "Maintain current lifestyle and schedule regular health check-ups."
         elif risk_level == "Moderate":
             recommendation = "Consider lifestyle modifications and consult healthcare provider for preventive measures."
-        else:
+        elif risk_level == "High":
             recommendation = "Schedule an immediate consultation with your healthcare provider for comprehensive evaluation."
+        else:
+            recommendation = "Urgent medical attention required. Please consult your healthcare provider immediately."
 
+        # Determine potential diseases based on biomarker values
         potential_diseases = []
         if features['BMI'] >= 30:
             potential_diseases.append("Obesity")
@@ -180,70 +189,13 @@ def predict_diabetes(features):
             potential_diseases.append("Kidney Function Impairment")
 
         result = {
-            "currentRiskLevel": risk_level,
+            "riskLevel": risk_level,
             "riskValue": risk_value,
-            "allRiskLevels": risk_levels,
-            "factors": factors,
-            "recommendations": {
-                "current": standard_recommendations[risk_level],
-                "allLevels": standard_recommendations
-            },
-            "potentialDiseases": potential_diseases,
-            "biomarkerIssues": biomarker_issues,
-            "standardGuidelines": {
-                "BMI": "Normal range: 18.5-24.9",
-                "Cholesterol": "Target: < 4.0 mmol/L",
-                "Triglycerides": "Target: < 1.3 mmol/L",
-                "HDL": "Target: > 1.3-1.5 mmol/L",
-                "LDL": "Target: < 2.0 mmol/L",
-                "BUN": "Normal range: 4.0-6.5 mmol/L",
-                "Creatinine": "Normal range: 60-90 µmol/L"
-            }
+            "factors": biomarker_issues,
+            "recommendation": recommendation,
+            "potentialDiseases": potential_diseases
         }
 
-        # Add specific conditions and remedies based on biomarker values
-        conditions = []
-        remedies = []
-        
-        # BMI Analysis
-        if features['BMI'] > 24:
-            conditions.append("High BMI - Risk factor for diabetes")
-            remedies.append("Regular exercise (30 mins/day), balanced diet with reduced calories")
-        
-        # Cholesterol Analysis
-        if features['Chol'] >= 4.0:
-            conditions.append("Elevated Cholesterol")
-            remedies.append("Limit saturated fats, increase fiber intake, consider statins if prescribed")
-            
-        # Triglycerides Analysis    
-        if features['TG'] >= 1.3:
-            conditions.append("High Triglycerides")
-            remedies.append("Reduce sugar intake, limit alcohol, increase omega-3 rich foods")
-            
-        # HDL Analysis
-        if features['HDL'] < 1.3:
-            conditions.append("Low HDL (Good) Cholesterol")
-            remedies.append("Regular aerobic exercise, quit smoking, maintain healthy weight")
-            
-        # LDL Analysis
-        if features['LDL'] >= 2.0:
-            conditions.append("High LDL (Bad) Cholesterol")
-            remedies.append("Mediterranean diet, limit processed foods, regular exercise")
-            
-        # Kidney Function Analysis
-        if features['Cr'] < 60 or features['Cr'] > 90:
-            conditions.append("Abnormal Creatinine Levels")
-            remedies.append("Stay hydrated, limit protein intake, regular kidney function monitoring")
-            
-        if features['BUN'] < 4.0 or features['BUN'] > 6.5:
-            conditions.append("Abnormal BUN Levels")
-            remedies.append("Monitor protein intake, maintain hydration, regular kidney checkups")
-
-        result.update({
-            "conditions": conditions,
-            "remedies": remedies
-        })
-        
         return result
 
     except Exception as e:

@@ -70,6 +70,7 @@ export interface DiseasePrediction {
   riskValue: number;
   factors: PredictionFactor[];
   recommendation: string;
+  potentialDiseases?: string[];
 }
 
 export interface BloodPredictionResponse {

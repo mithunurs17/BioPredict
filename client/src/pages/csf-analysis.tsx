@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Loader2, FileUp, AlertTriangle } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/api';
 import { CSFBiomarkerFormSchema, type CSFBiomarkerForm, type CSFPredictionResponse } from '@/types';
 import { PredictionCard } from '@/components/results/prediction-card';
 import { TextToSpeech } from '@/components/text-to-speech';
@@ -41,7 +41,7 @@ export default function CSFAnalysisPage() {
   
   const predictionMutation = useMutation({
     mutationFn: async (data: CSFBiomarkerForm) => {
-      const response = await apiRequest('POST', '/api/predict/csf', data);
+      const response = await apiRequest('POST', '/api/predictions/csf', data);
       return response.json();
     },
     onSuccess: (data: CSFPredictionResponse) => {

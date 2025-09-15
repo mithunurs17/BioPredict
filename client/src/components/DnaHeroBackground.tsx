@@ -16,7 +16,7 @@ function randomBetween(a: number, b: number) {
   return a + Math.random() * (b - a);
 }
 
-const DnaHeroBackground = () => {
+export const DnaHeroBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -136,4 +136,4 @@ const DnaHeroBackground = () => {
   );
 };
 
-export default DnaHeroBackground; 
+export default DnaHeroBackground;

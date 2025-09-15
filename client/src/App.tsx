@@ -6,6 +6,9 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import About from "@/pages/about";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
+import Dashboard from "@/pages/dashboard";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AIChatbot } from "@/components/ai-chatbot";
 import { Suspense, lazy } from "react";
@@ -13,6 +16,29 @@ import { motion } from "framer-motion";
 import { AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { MeteorBackground } from "@/components/meteor-background";
+import { AuthProvider } from "@/contexts/auth-context";
+import { ProtectedRoute } from "@/components/protected-route";
+
+// Dynamic import helper
+function dynamic(importFn: () => Promise<any>) {
+  const LazyComponent = lazy(importFn);
+  return (props: any) => (
+    <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
+      <LazyComponent {...props} />
+    </Suspense>
+  );
+}
+
+// Lazy loaded components
+const ResearchPage = dynamic(() => import("@/pages/research"));
+const BloodAnalysisPage = dynamic(() => import("@/pages/blood-analysis"));
+const SalivaAnalysisPage = dynamic(() => import("@/pages/saliva-analysis"));
+const UrineAnalysisPage = dynamic(() => import("@/pages/urine-analysis"));
+const CSFAnalysisPage = dynamic(() => import("@/pages/csf-analysis"));
+const PrivacyPolicyPage = dynamic(() => import("@/pages/privacy-policy"));
+const TermsOfServicePage = dynamic(() => import("@/pages/terms-of-service"));
+const DataUsagePage = dynamic(() => import("@/pages/data-usage"));
+const ContactPage = dynamic(() => import("@/pages/contact"));
 
 function Router() {
   const [location] = useLocation();
@@ -46,6 +72,54 @@ function Router() {
         type: 'tween',
         ease: 'easeOut',
         duration: 0.6
+      }
+    },
+    auth: {
+      variants: {
+        initial: { 
+          opacity: 0, 
+          scale: 0.95,
+          filter: 'blur(8px)'
+        },
+        in: { 
+          opacity: 1, 
+          scale: 1,
+          filter: 'blur(0px)'
+        },
+        out: { 
+          opacity: 0, 
+          scale: 1.05,
+          filter: 'blur(8px)'
+        }
+      },
+      transition: {
+        type: 'tween',
+        ease: 'easeInOut',
+        duration: 0.5
+      }
+    },
+    dashboard: {
+      variants: {
+        initial: { 
+          opacity: 0, 
+          y: '3%', 
+          filter: 'brightness(0.8)'
+        },
+        in: { 
+          opacity: 1, 
+          y: 0, 
+          filter: 'brightness(1)'
+        },
+        out: { 
+          opacity: 0, 
+          y: '-3%', 
+          filter: 'brightness(0.8)'
+        }
+      },
+      transition: {
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 0.5
       }
     },
     home: {
@@ -158,17 +232,6 @@ function Router() {
       }
     }
   };
-
-  const ResearchPage = dynamic(() => import("@/pages/research"));
-  const BloodAnalysisPage = dynamic(() => import("@/pages/blood-analysis"));
-  const SalivaAnalysisPage = dynamic(() => import("@/pages/saliva-analysis"));
-  const UrineAnalysisPage = dynamic(() => import("@/pages/urine-analysis"));
-  const CSFAnalysisPage = dynamic(() => import("@/pages/csf-analysis"));
-
-  const PrivacyPolicyPage = dynamic(() => import("@/pages/privacy-policy"));
-  const TermsOfServicePage = dynamic(() => import("@/pages/terms-of-service"));
-  const DataUsagePage = dynamic(() => import("@/pages/data-usage"));
-  const ContactPage = dynamic(() => import("@/pages/contact"));
 
   return (
     <AnimatePresence mode='wait'>
@@ -305,6 +368,45 @@ function Router() {
             <ContactPage />
           </motion.div>
         )} />
+        {/* Auth Routes */}
+        <Route path="/login" component={() => (
+          <motion.div
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageTransitions.auth.variants}
+            transition={pageTransitions.auth.transition}
+          >
+            <Login />
+          </motion.div>
+        )} />
+        
+        <Route path="/signup" component={() => (
+          <motion.div
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageTransitions.auth.variants}
+            transition={pageTransitions.auth.transition}
+          >
+            <Signup />
+          </motion.div>
+        )} />
+        
+        <Route path="/dashboard" component={() => (
+          <motion.div
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageTransitions.dashboard.variants}
+            transition={pageTransitions.dashboard.transition}
+          >
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </motion.div>
+        )} />
+        
         {/* Fallback to 404 */}
         <Route component={NotFound} />
       </Switch>
@@ -312,25 +414,35 @@ function Router() {
   );
 }
 
-// Dynamic import helper
-function dynamic(importFn: () => Promise<any>) {
-  const LazyComponent = lazy(importFn);
-  return (props: any) => (
-    <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
-      <LazyComponent {...props} />
-    </Suspense>
-  );
-}
-
 function App() {
+  const [location] = useLocation();
+  const isLandingPage = location === '/';
+
+  // const { isAuthenticated, isLoading } = useAuth(); // Removed: useAuth must be within AuthProvider
+  
+  // console.log('App.tsx - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading); // Removed: useAuth must be within AuthProvider
+
+  // Define routes where chatbot should be shown
+  const showChatbotRoutes = [
+    '/home',
+    '/about',
+    '/research',
+    '/blood-analysis',
+    '/saliva-analysis',
+    '/urine-analysis',
+    '/csf-analysis'
+  ];
+
   return (
-    <ThemeProvider defaultTheme="dark">
-      <QueryClientProvider client={queryClient}>
-        <MeteorBackground />
-        <Router />
-        <AIChatbot />
-        <Toaster />
-      </QueryClientProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="biopredict-theme">
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          {!isLandingPage && <MeteorBackground />}
+          <Router />
+          {showChatbotRoutes.includes(location) && <AIChatbot />}
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

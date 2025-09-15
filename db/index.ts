@@ -1,19 +1,28 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as schema from "@shared/schema";
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
 
-// This is the correct way neon config - DO NOT change this
-neonConfig.webSocketConstructor = ws;
+// Load environment variables
+dotenv.config();
 
-let pool;
-let db;
-
-if (process.env.DATABASE_URL) {
-  pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  db = drizzle({ client: pool, schema });
-} else {
-  console.warn("DATABASE_URL not set, database features will be disabled");
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
 }
 
-export { pool, db };
+const prisma = new PrismaClient();
+
+// Test the database connection
+async function testConnection() {
+  try {
+    const result = await prisma.user.findFirst();
+    console.log("Database connection test successful");
+    return true;
+  } catch (error) {
+    console.error("Database connection test failed:", error);
+    throw error;
+  }
+}
+
+// Run the connection test
+testConnection().catch(console.error);
+
+export { prisma };

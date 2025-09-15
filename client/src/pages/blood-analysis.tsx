@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Loader2, FileUp, AlertTriangle } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/api';
 import { BloodBiomarkerFormSchema, type BloodBiomarkerForm, type BloodPredictionResponse } from '@/types';
 import { PredictionCard } from '@/components/results/prediction-card';
 import { TextToSpeech } from '@/components/text-to-speech';
@@ -24,13 +24,15 @@ export default function BloodAnalysisPage() {
   const form = useForm<BloodBiomarkerForm>({
     resolver: zodResolver(BloodBiomarkerFormSchema),
     defaultValues: {
-      BMI: 24,
-      Chol: 4.2,
-      TG: 0.9,
-      HDL: 2.4,
-      LDL: 1.4,
-      Cr: 46.0,
-      BUN: 4.7
+      BMI: 32,
+      Chol: 5.5,
+      TG: 2.2,
+      HDL: 0.9,
+      LDL: 3.6,
+      Cr: 110,
+      BUN: 7.5,
+      weight: 90,
+      height: 170
     },
   });
 
@@ -38,7 +40,7 @@ export default function BloodAnalysisPage() {
     mutationFn: async (data: BloodBiomarkerForm) => {
       console.log('Sending prediction request with data:', JSON.stringify(data, null, 2));
       try {
-        const response = await apiRequest('POST', '/api/predict/blood', data);
+        const response = await apiRequest('POST', '/api/predictions/blood', data);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.details || 'Failed to analyze blood biomarkers');
@@ -83,14 +85,14 @@ export default function BloodAnalysisPage() {
       // Simulate parsing the file and extracting values
       // In a real app, you would parse the file (PDF, CSV, etc.) here
       setTimeout(() => {
-        // For demo, set random realistic values
-        form.setValue('BMI', Math.floor(Math.random() * (30 - 18) + 18));
-        form.setValue('Chol', Number((Math.random() * (6.0 - 3.0) + 3.0).toFixed(1)));
-        form.setValue('TG', Number((Math.random() * (2.0 - 0.5) + 0.5).toFixed(1)));
-        form.setValue('HDL', Number((Math.random() * (3.0 - 1.5) + 1.5).toFixed(1)));
-        form.setValue('LDL', Number((Math.random() * (3.0 - 1.0) + 1.0).toFixed(1)));
-        form.setValue('Cr', Math.floor(Math.random() * (100 - 40) + 40));
-        form.setValue('BUN', Math.floor(Math.random() * (10 - 5) + 5));
+        // Set high-risk values
+        form.setValue('BMI', 32);
+        form.setValue('Chol', 5.5);
+        form.setValue('TG', 2.2);
+        form.setValue('HDL', 0.9);
+        form.setValue('LDL', 3.6);
+        form.setValue('Cr', 110);
+        form.setValue('BUN', 7.5);
 
         toast({
           title: "Report Processed",
@@ -341,140 +343,35 @@ export default function BloodAnalysisPage() {
         {predictionResults && (
           <div id="results-section" className="mt-10 pt-6 border-t">
             <h2 className="text-2xl font-bold mb-6">Your Health Analysis Results</h2>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Risk Assessment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Risk Level:</span>
-                      <span className={`font-bold ${
-                        predictionResults.riskLevel === "Low" ? "text-green-600" :
-                        predictionResults.riskLevel === "Moderate" ? "text-yellow-600" :
-                        "text-red-600"
-                      }`}>
-                        {predictionResults.riskLevel}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Risk Value:</span>
-                      <span className="font-bold">{predictionResults.riskValue}%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Potential Health Conditions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {predictionResults.potentialDiseases && predictionResults.potentialDiseases.length > 0 ? (
-                    <ul className="space-y-2">
-                      {predictionResults.potentialDiseases.map((disease, index) => (
-                        <li key={index} className="flex items-center">
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
-                          <span>{disease}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-green-600">No specific health conditions detected</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Biomarker Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="mb-6">
-                      <h3 className="font-semibold mb-2">Risk Assessment</h3>
-                      <div className="pl-4 space-y-2">
-                        <div>Risk Level: <span className={`font-semibold ${
-                          predictionResults.riskLevel === "Low" ? "text-green-600" :
-                          predictionResults.riskLevel === "Moderate" ? "text-yellow-600" :
-                          "text-red-600"
-                        }`}>{predictionResults.riskLevel}</span></div>
-                        <div>Risk Value: <span className="font-semibold">{predictionResults.riskValue}%</span></div>
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="font-semibold mb-2">Identified Conditions</h3>
-                      <div className="pl-4">
-                        {predictionResults.conditions && predictionResults.conditions.length > 0 ? (
-                          <ul className="list-disc list-inside space-y-2">
-                            {predictionResults.conditions.map((condition, index) => (
-                              <li key={index} className="text-red-600">{condition}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-green-600">No concerning conditions detected</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="font-semibold mb-2">Recommended Actions</h3>
-                      <div className="pl-4">
-                        {predictionResults.remedies && predictionResults.remedies.length > 0 ? (
-                          <ul className="list-disc list-inside space-y-2">
-                            {predictionResults.remedies.map((remedy, index) => (
-                              <li key={index} className="text-blue-600">{remedy}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground">Maintain current healthy lifestyle</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="font-semibold mb-2">Potential Health Conditions</h3>
-                      <div className="pl-4">
-                        {predictionResults.potentialDiseases && predictionResults.potentialDiseases.length > 0 ? (
-                          <ul className="list-disc list-inside space-y-1">
-                            {predictionResults.potentialDiseases.map((disease, index) => (
-                              <li key={index} className="text-muted-foreground">{disease}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground">No specific health conditions detected</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="font-semibold mb-2">Contributing Factors</h3>
-                      <ul className="pl-4 space-y-2">
-                        {predictionResults.factors?.map((factor, index) => (
-                          <li key={index} className="flex items-center">
-                            <span className={`h-2 w-2 rounded-full mr-2 ${
-                              factor.includes("Normal") || factor.includes("healthy") 
-                                ? "bg-green-500" 
-                                : factor.includes("slightly") 
-                                  ? "bg-yellow-500" 
-                                  : "bg-red-500"
-                            }`} />
-                            <span className="text-muted-foreground">{factor}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="mt-6">
-                      <h3 className="font-semibold mb-2">Recommendation:</h3>
-                      <p className="text-muted-foreground">{predictionResults.recommendation}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {predictionResults.diabetes && (
+                <PredictionCard
+                  title="Diabetes Risk Assessment"
+                  riskLevel={predictionResults.diabetes.riskLevel}
+                  riskValue={predictionResults.diabetes.riskValue}
+                  riskColorStart="hsl(var(--blood-primary))"
+                  riskColorEnd="hsl(var(--blood-secondary))"
+                  factors={predictionResults.diabetes.factors}
+                  recommendation={predictionResults.diabetes.recommendation}
+                  fluid="blood"
+                  potentialDiseases={predictionResults.diabetes.potentialDiseases}
+                />
+              )}
+              
+              {predictionResults.cardiovascular && (
+                <PredictionCard
+                  title="Cardiovascular Risk Assessment"
+                  riskLevel={predictionResults.cardiovascular.riskLevel}
+                  riskValue={predictionResults.cardiovascular.riskValue}
+                  riskColorStart="hsl(var(--blood-primary))"
+                  riskColorEnd="hsl(var(--blood-secondary))"
+                  factors={predictionResults.cardiovascular.factors}
+                  recommendation={predictionResults.cardiovascular.recommendation}
+                  fluid="blood"
+                  potentialDiseases={predictionResults.cardiovascular.potentialDiseases}
+                />
+              )}
             </div>
           </div>
         )}

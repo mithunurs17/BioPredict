@@ -26,132 +26,253 @@ import {
 
 // Helper function to determine risk level based on score
 function getRiskLevel(score: number): string {
-  if (score < 10) return "Minimal";
-  if (score < 25) return "Very Low";
-  if (score < 40) return "Low";
-  if (score < 60) return "Moderate";
+  if (score < 15) return "Minimal";
+  if (score < 35) return "Low";
+  if (score < 55) return "Moderate";
   if (score < 75) return "High";
   return "Very High";
 }
 
+// Helper function to get potential diseases based on risk level and type
+function getPotentialDiseases(riskLevel: string, type: string): string[] {
+  if (riskLevel === "Minimal" || riskLevel === "Very Low") {
+    return [];
+  }
+
+  switch (type) {
+    case "diabetes":
+      return riskLevel === "High" || riskLevel === "Very High" 
+        ? ["Type 2 Diabetes", "Metabolic Syndrome"]
+        : ["Pre-diabetes"];
+    case "cardiovascular":
+      return riskLevel === "High" || riskLevel === "Very High"
+        ? ["Coronary Artery Disease", "Hypertension", "Atherosclerosis"]
+        : ["Early Cardiovascular Risk"];
+    case "oralCancer":
+      return riskLevel === "High" || riskLevel === "Very High"
+        ? ["Oral Squamous Cell Carcinoma", "Oral Leukoplakia"]
+        : ["Oral Precancerous Lesions"];
+    case "kidney":
+      return riskLevel === "High" || riskLevel === "Very High"
+        ? ["Chronic Kidney Disease", "Kidney Failure"]
+        : ["Early Kidney Dysfunction"];
+    case "alzheimer":
+      return riskLevel === "High" || riskLevel === "Very High"
+        ? ["Alzheimer's Disease", "Dementia"]
+        : ["Mild Cognitive Impairment"];
+    case "brainTumor":
+      return riskLevel === "High" || riskLevel === "Very High"
+        ? ["Brain Tumor", "Intracranial Mass"]
+        : ["Neurological Abnormalities"];
+    default:
+      return [];
+  }
+}
+
 // Blood-based predictions
 export async function predictDiabetesFromBlood(data: BloodBiomarkerForm): Promise<DiseasePrediction> {
-  const riskValue = diabetesModel(data);
-  const riskLevel = getRiskLevel(riskValue);
-  
-  // Determine key factors
+  // Calculate risk score based on biomarkers
+  let riskScore = 0;
   const factors: PredictionFactor[] = [];
   
-  if (data.glucose) {
-    if (data.glucose >= 126) {
-      factors.push({ type: "negative", text: `Elevated fasting glucose (${data.glucose} mg/dL)` });
-    } else if (data.glucose >= 100 && data.glucose < 126) {
-      factors.push({ type: "warning", text: `Elevated fasting glucose (${data.glucose} mg/dL)` });
-    } else {
-      factors.push({ type: "positive", text: `Normal fasting glucose (${data.glucose} mg/dL)` });
-    }
+  // BMI risk (0-25 points)
+  if (data.BMI > 30) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Severe obesity (BMI: ${data.BMI})` });
+  } else if (data.BMI > 25) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `Overweight (BMI: ${data.BMI})` });
+  } else if (data.BMI < 18.5) {
+    riskScore += 15;
+    factors.push({ type: "warning", text: `Underweight (BMI: ${data.BMI})` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy BMI (${data.BMI})` });
   }
   
-  if (data.hba1c) {
-    if (data.hba1c >= 6.5) {
-      factors.push({ type: "negative", text: `HbA1c above diabetic threshold (${data.hba1c}%)` });
-    } else if (data.hba1c >= 5.7 && data.hba1c < 6.5) {
-      factors.push({ type: "warning", text: `HbA1c slightly above normal range (${data.hba1c}%)` });
-    } else {
-      factors.push({ type: "positive", text: `Normal HbA1c levels (${data.hba1c}%)` });
-    }
+  // Cholesterol risk (0-20 points)
+  if (data.Chol > 5.2) {
+    riskScore += 20;
+    factors.push({ type: "negative", text: `Very high cholesterol (${data.Chol} mmol/L)` });
+  } else if (data.Chol > 4.0) {
+    riskScore += 15;
+    factors.push({ type: "warning", text: `High cholesterol (${data.Chol} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy cholesterol (${data.Chol} mmol/L)` });
   }
   
-  if (data.triglycerides) {
-    if (data.triglycerides > 150) {
-      factors.push({ type: "warning", text: `Elevated triglyceride levels (${data.triglycerides} mg/dL)` });
-    } else {
-      factors.push({ type: "positive", text: `Normal triglyceride levels (${data.triglycerides} mg/dL)` });
-    }
+  // Triglycerides risk (0-20 points)
+  if (data.TG > 2.0) {
+    riskScore += 20;
+    factors.push({ type: "negative", text: `Very high triglycerides (${data.TG} mmol/L)` });
+  } else if (data.TG > 1.3) {
+    riskScore += 15;
+    factors.push({ type: "warning", text: `High triglycerides (${data.TG} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy triglycerides (${data.TG} mmol/L)` });
   }
+  
+  // HDL risk (0-20 points)
+  if (data.HDL < 1.0) {
+    riskScore += 20;
+    factors.push({ type: "negative", text: `Very low HDL (${data.HDL} mmol/L)` });
+  } else if (data.HDL < 1.3) {
+    riskScore += 15;
+    factors.push({ type: "warning", text: `Low HDL (${data.HDL} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy HDL (${data.HDL} mmol/L)` });
+  }
+  
+  // LDL risk (0-20 points)
+  if (data.LDL > 3.4) {
+    riskScore += 20;
+    factors.push({ type: "negative", text: `Very high LDL (${data.LDL} mmol/L)` });
+  } else if (data.LDL > 2.0) {
+    riskScore += 15;
+    factors.push({ type: "warning", text: `High LDL (${data.LDL} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy LDL (${data.LDL} mmol/L)` });
+  }
+  
+  // Kidney function risk (0-25 points)
+  if (data.Cr > 106 || data.BUN > 7.1) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Severe kidney impairment (Creatinine: ${data.Cr} μmol/L, BUN: ${data.BUN} mmol/L)` });
+  } else if (data.Cr > 90 || data.BUN > 6.5) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `Moderate kidney impairment (Creatinine: ${data.Cr} μmol/L, BUN: ${data.BUN} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy kidney function (Creatinine: ${data.Cr} μmol/L, BUN: ${data.BUN} mmol/L)` });
+  }
+  
+  // Add additional risk points for multiple unhealthy parameters
+  const unhealthyCount = factors.filter(f => f.type === "negative" || f.type === "warning").length;
+  if (unhealthyCount >= 3) {
+    riskScore += 20;  // Additional risk for multiple unhealthy parameters
+  }
+  
+  // Ensure risk score is between 0 and 100
+  riskScore = Math.min(Math.max(riskScore, 0), 100);
+  
+  // Determine risk level
+  const riskLevel = getRiskLevel(riskScore);
   
   // Generate recommendation based on risk level
   let recommendation = "";
-  
-  if (riskValue < 25) {
-    recommendation = "Continue maintaining a healthy lifestyle with regular exercise and balanced diet. Routine screening is sufficient.";
-  } else if (riskValue < 60) {
-    recommendation = "Consider lifestyle modifications including diet changes and increased physical activity. Follow-up testing recommended in 3-6 months.";
+  if (riskLevel === "Minimal") {
+    recommendation = "Continue maintaining your healthy lifestyle with regular check-ups.";
+  } else if (riskLevel === "Low") {
+    recommendation = "Maintain current lifestyle and schedule regular health check-ups.";
+  } else if (riskLevel === "Moderate") {
+    recommendation = "Consider lifestyle modifications and consult healthcare provider for preventive measures.";
+  } else if (riskLevel === "High") {
+    recommendation = "Schedule an immediate consultation with your healthcare provider for comprehensive evaluation.";
   } else {
-    recommendation = "Consult with a healthcare provider promptly. Further diagnostic testing is recommended along with immediate lifestyle interventions.";
+    recommendation = "Urgent medical attention required. Please consult your healthcare provider immediately.";
   }
+  
+  // Determine potential diseases
+  const potentialDiseases = [];
+  if (data.BMI >= 30) potentialDiseases.push("Obesity");
+  if (data.Chol > 5.2 || data.LDL > 3.4) potentialDiseases.push("Hypercholesterolemia");
+  if (data.TG > 1.7) potentialDiseases.push("Hypertriglyceridemia");
+  if (data.Cr > 106 || data.BUN > 7.1) potentialDiseases.push("Kidney Function Impairment");
   
   return {
     riskLevel,
-    riskValue,
+    riskValue: riskScore,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases
   };
 }
 
 export async function predictCardiovascularDisease(data: BloodBiomarkerForm): Promise<DiseasePrediction> {
-  const riskValue = cardiovascularModel(data);
-  const riskLevel = getRiskLevel(riskValue);
-  
-  // Determine key factors
+  // Calculate risk score based on cardiovascular biomarkers
+  let riskScore = 0;
   const factors: PredictionFactor[] = [];
   
-  if (data.totalCholesterol) {
-    if (data.totalCholesterol >= 240) {
-      factors.push({ type: "negative", text: `High total cholesterol (${data.totalCholesterol} mg/dL)` });
-    } else if (data.totalCholesterol >= 200 && data.totalCholesterol < 240) {
-      factors.push({ type: "warning", text: `Slightly elevated total cholesterol (${data.totalCholesterol} mg/dL)` });
-    } else {
-      factors.push({ type: "positive", text: `Healthy total cholesterol (${data.totalCholesterol} mg/dL)` });
-    }
+  // Cholesterol risk (0-25 points)
+  if (data.Chol > 5.2) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Very high total cholesterol (${data.Chol} mmol/L)` });
+  } else if (data.Chol > 4.0) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `High total cholesterol (${data.Chol} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy total cholesterol (${data.Chol} mmol/L)` });
   }
   
-  if (data.ldl) {
-    if (data.ldl >= 160) {
-      factors.push({ type: "negative", text: `High LDL cholesterol (${data.ldl} mg/dL)` });
-    } else if (data.ldl >= 130 && data.ldl < 160) {
-      factors.push({ type: "warning", text: `Borderline high LDL levels (${data.ldl} mg/dL)` });
-    } else {
-      factors.push({ type: "positive", text: `Optimal LDL levels (${data.ldl} mg/dL)` });
-    }
+  // LDL risk (0-25 points)
+  if (data.LDL > 3.4) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Very high LDL (${data.LDL} mmol/L)` });
+  } else if (data.LDL > 2.0) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `High LDL (${data.LDL} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy LDL (${data.LDL} mmol/L)` });
   }
   
-  if (data.hdl) {
-    if (data.hdl < 40) {
-      factors.push({ type: "negative", text: `Low HDL cholesterol (${data.hdl} mg/dL)` });
-    } else if (data.hdl >= 40 && data.hdl < 60) {
-      factors.push({ type: "warning", text: `Moderate HDL levels (${data.hdl} mg/dL)` });
-    } else {
-      factors.push({ type: "positive", text: `Healthy HDL levels (${data.hdl} mg/dL)` });
-    }
+  // HDL risk (0-25 points)
+  if (data.HDL < 1.0) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Very low HDL (${data.HDL} mmol/L)` });
+  } else if (data.HDL < 1.3) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `Low HDL (${data.HDL} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy HDL (${data.HDL} mmol/L)` });
   }
   
-  if (data.crp) {
-    if (data.crp >= 3) {
-      factors.push({ type: "negative", text: `High CRP levels (${data.crp} mg/L)` });
-    } else if (data.crp >= 1 && data.crp < 3) {
-      factors.push({ type: "warning", text: `Moderate CRP levels (${data.crp} mg/L)` });
-    } else {
-      factors.push({ type: "positive", text: `Normal CRP levels (${data.crp} mg/L)` });
-    }
+  // Triglycerides risk (0-25 points)
+  if (data.TG > 2.0) {
+    riskScore += 25;
+    factors.push({ type: "negative", text: `Very high triglycerides (${data.TG} mmol/L)` });
+  } else if (data.TG > 1.3) {
+    riskScore += 20;
+    factors.push({ type: "warning", text: `High triglycerides (${data.TG} mmol/L)` });
+  } else {
+    factors.push({ type: "positive", text: `Healthy triglycerides (${data.TG} mmol/L)` });
   }
+  
+  // Add additional risk points for multiple unhealthy parameters
+  const unhealthyCount = factors.filter(f => f.type === "negative" || f.type === "warning").length;
+  if (unhealthyCount >= 3) {
+    riskScore += 20;  // Additional risk for multiple unhealthy parameters
+  }
+  
+  // Ensure risk score is between 0 and 100
+  riskScore = Math.min(Math.max(riskScore, 0), 100);
+  
+  // Determine risk level
+  const riskLevel = getRiskLevel(riskScore);
   
   // Generate recommendation based on risk level
   let recommendation = "";
-  
-  if (riskValue < 25) {
-    recommendation = "Maintain current healthy habits. Regular cardiovascular check-ups every 1-2 years are sufficient.";
-  } else if (riskValue < 60) {
-    recommendation = "Consider dietary adjustments to address cholesterol levels. Increase physical activity and reduce saturated fat intake. Follow-up in 6 months.";
+  if (riskLevel === "Minimal") {
+    recommendation = "Continue maintaining your healthy lifestyle with regular check-ups.";
+  } else if (riskLevel === "Low") {
+    recommendation = "Maintain current lifestyle and schedule regular health check-ups.";
+  } else if (riskLevel === "Moderate") {
+    recommendation = "Consider lifestyle modifications and consult healthcare provider for preventive measures.";
+  } else if (riskLevel === "High") {
+    recommendation = "Schedule an immediate consultation with your healthcare provider for comprehensive evaluation.";
   } else {
-    recommendation = "Consult with a cardiologist soon. Consider medication options alongside significant lifestyle modifications to reduce cardiovascular risk.";
+    recommendation = "Urgent medical attention required. Please consult your healthcare provider immediately.";
   }
+  
+  // Determine potential diseases
+  const potentialDiseases = [];
+  if (data.Chol > 5.2 || data.LDL > 3.4) potentialDiseases.push("Hypercholesterolemia");
+  if (data.TG > 1.7) potentialDiseases.push("Hypertriglyceridemia");
+  if (data.HDL < 1.0) potentialDiseases.push("Low HDL Syndrome");
   
   return {
     riskLevel,
-    riskValue,
+    riskValue: riskScore,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases
   };
 }
 
@@ -208,7 +329,8 @@ export async function predictOralCancer(data: SalivaBiomarkerForm): Promise<Dise
     riskLevel,
     riskValue,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases: getPotentialDiseases(riskLevel, "oralCancer")
   };
 }
 
@@ -265,7 +387,8 @@ export async function predictKidneyDisease(data: UrineBiomarkerForm): Promise<Di
     riskLevel,
     riskValue,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases: getPotentialDiseases(riskLevel, "kidney")
   };
 }
 
@@ -319,7 +442,8 @@ export async function predictDiabetesFromUrine(data: UrineBiomarkerForm): Promis
     riskLevel,
     riskValue,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases: getPotentialDiseases(riskLevel, "diabetes")
   };
 }
 
@@ -376,7 +500,8 @@ export async function predictAlzheimers(data: CSFBiomarkerForm): Promise<Disease
     riskLevel,
     riskValue,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases: getPotentialDiseases(riskLevel, "alzheimer")
   };
 }
 
@@ -440,6 +565,7 @@ export async function predictBrainTumor(data: CSFBiomarkerForm): Promise<Disease
     riskLevel,
     riskValue,
     factors,
-    recommendation
+    recommendation,
+    potentialDiseases: getPotentialDiseases(riskLevel, "brainTumor")
   };
 }

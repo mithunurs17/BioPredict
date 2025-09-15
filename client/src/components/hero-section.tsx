@@ -6,17 +6,17 @@ import { motion } from "framer-motion";
 export function HeroSection() {
   // Content for text-to-speech
   const heroText = `
-    BioPredict uses machine learning to predict disease risk from biomarker analysis.
-    Upload your lab reports or enter biomarker values for comprehensive health insights.
-    We analyze blood, saliva, urine, and cerebrospinal fluid to predict risks for 
-    cardiovascular disease, diabetes, kidney disease, oral cancer, Alzheimer's, and more.
+    Welcome to BioPredict, where advanced machine learning meets biomarker analysis.
+    Our platform helps you understand your health risks through comprehensive analysis
+    of blood, saliva, urine, and cerebrospinal fluid biomarkers.
   `;
 
   // Scroll to fluid section
   const scrollToFluidSection = () => {
-    document.getElementById('fluid-section')?.scrollIntoView({ 
-      behavior: 'smooth' 
-    });
+    const fluidSection = document.getElementById('fluid-selection');
+    if (fluidSection) {
+      fluidSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
   
   return (
@@ -37,7 +37,7 @@ export function HeroSection() {
           >
             <div className="flex justify-between items-center mb-2">
               <h1 className="font-poppins text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-                Bio<span className="text-primary">Predict</span>
+                <span className="rgb-text">Bio</span><span className="text-primary">Predict</span>
               </h1>
               <TextToSpeech text={heroText} />
             </div>
