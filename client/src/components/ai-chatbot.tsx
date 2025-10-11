@@ -6,7 +6,6 @@ import { MessageCircleIcon, SendIcon, XIcon, LoaderIcon, Mic, Upload, Volume2, V
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
-import OpenAI from 'openai';
 import { TextToSpeech } from '@/components/text-to-speech';
 
 // Helper function to read file as base64
@@ -18,18 +17,6 @@ const readFileAsBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
-
-// Initialize OpenAI client with OpenRouter
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: "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",
-  defaultHeaders: {
-    "HTTP-Referer": "http://localhost:5000",
-    "X-Title": "BioPredict",
-  },
-  dangerouslyAllowBrowser: true, // Add this flag to allow browser usage
-  timeout: 15000, // Set a 15-second timeout for all requests
-});
 
 interface Message {
   role: 'user' | 'assistant';
@@ -509,46 +496,42 @@ Attached file: ${uploadedFile.name}`;
         }
       }
       
-      // Try models in order until one works
-      let completion: any = null;
-      let error: any = null;
+      // Call our server's chat endpoint instead of OpenRouter directly
+      console.log('Sending request to /api/ai/chat with messages:', messagesToSend);
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messagesToSend
+        }),
+      });
       
-      for (const model of ['openai/gpt-oss-20b:free']) {
+      console.log('Response status:', response.status, response.statusText);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
         try {
-          // Set a timeout for the API call
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Request to ${model} timed out`)), 60000)
-          );
-          
-          const responsePromise = client.chat.completions.create({
-            model,
-            messages: messagesToSend as any,
-            temperature: 0.7,
-            stream: false
-          });
-          
-          // Race between the API call and the timeout
-          completion = await Promise.race([responsePromise, timeoutPromise]);
-          console.log(`Received response from ${model}:`, JSON.stringify(completion, null, 2));
-          
-          // If we got a valid response, break the loop
-          if (completion && completion.choices && completion.choices[0]?.message?.content) {
-            break;
-          }
-        } catch (err) {
-          console.error(`Error with model ${model}:`, err);
-          error = err;
-          // Continue to the next model
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (jsonError) {
+          // If we can't parse the error response as JSON, use the status text
+          console.error('Could not parse error response as JSON:', jsonError);
         }
-      }
-      
-      // If we didn't get a valid completion from any model, throw the last error
-      if (!completion || !completion.choices || !completion.choices[0]?.message?.content) {
-        console.error('All models failed. Last error:', error);
-        throw error || new Error('Failed to get a response from any model');
+        throw new Error(errorMessage);
       }
 
-      let responseText = completion.choices[0].message.content;
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse response as JSON:', jsonError);
+        throw new Error('Server returned invalid response format');
+      }
+
+      let responseText = data.response;
       
       // Post-process the response to remove asterisks and improve formatting
       responseText = responseText

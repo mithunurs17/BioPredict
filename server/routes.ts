@@ -7,6 +7,7 @@ import { authenticateToken } from "./middleware/auth";
 import { Router } from 'express';
 import authRoutes from './routes/auth';
 import predictionRoutes from './routes/prediction';
+import aiRoutes from './routes/ai';
 
 const router = Router();
 
@@ -16,8 +17,8 @@ router.use('/auth', authRoutes);
 // Protected routes
 router.use('/predictions', authenticateToken, predictionRoutes);
 
-// AI Chatbot endpoint - moved under the main router
-router.post('/chat', handleChatMessage);
+// AI Chatbot routes
+router.use('/ai', aiRoutes);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Mount all routes under /api
