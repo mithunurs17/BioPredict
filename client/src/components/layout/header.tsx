@@ -11,7 +11,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link href="/home" className="text-xl font-bold text-white">
-              DiseaseDetect
+              BioPredict
             </Link>
             <nav className="hidden md:flex space-x-6">
               <Link href="/home" className="text-zinc-300 hover:text-white">

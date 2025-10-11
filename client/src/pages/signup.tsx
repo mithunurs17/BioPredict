@@ -69,7 +69,7 @@ export default function Signup() {
               </CardTitle>
             </motion.div>
             <CardDescription className="text-center text-zinc-400">
-              Join DiseaseDetect to start predicting health risks
+              Join BioPredict to start predicting health risks
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -4,7 +4,7 @@ const { Configuration, OpenAIApi } = require('openai');
 const auth = require('../middleware/auth');
 
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: "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",
 });
 const openai = new OpenAIApi(configuration);
 
@@ -13,11 +13,11 @@ router.post('/chat', auth, async (req, res) => {
   try {
     const { message } = req.body;
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "openai/gpt-oss-20b:free",
       messages: [
         {
           role: "system",
-          content: "You are a helpful medical assistant that provides information about diseases and health conditions based on biomarker analysis. Keep responses concise and informative."
+          content: "You are a helpful medical assistant. IMPORTANT: Format your responses using clean numbered lists (1. 2. 3.) and bullet points without asterisks (*). Never use asterisks (*) in your responses. Use proper spacing between sections. Make your responses look professional and aesthetic. Keep responses concise and informative."
         },
         {
           role: "user",
@@ -26,7 +26,16 @@ router.post('/chat', auth, async (req, res) => {
       ],
     });
 
-    res.json({ response: completion.data.choices[0].message.content });
+    let responseText = completion.data.choices[0].message.content;
+    
+    // Post-process the response to remove asterisks and improve formatting
+    responseText = responseText
+      .replace(/\*\s*/g, '') // Remove asterisks and spaces after them
+      .replace(/^\s*[\*\-]\s*/gm, '• ') // Convert remaining bullet points to clean bullets
+      .replace(/\n\s*\n/g, '\n\n') // Clean up extra line breaks
+      .trim();
+    
+    res.json({ response: responseText });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({ message: 'Error processing chat request' });
@@ -50,7 +59,7 @@ router.post('/analyze-health', auth, async (req, res) => {
     Provide 3-5 most relevant insights.`;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "openai/gpt-oss-20b:free",
       messages: [
         {
           role: "system",

@@ -4,10 +4,10 @@ import OpenAI from "openai";
 // Initialize OpenAI client with OpenRouter
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: "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",
+  apiKey: "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",
   defaultHeaders: {
     "HTTP-Referer": "http://localhost:5000",
-    "X-Title": "DiseaseDetect",
+    "X-Title": "BioPredict",
   },
 });
 
@@ -29,11 +29,17 @@ export async function handleChatMessage(req: Request, res: Response) {
 
     // Send request to OpenRouter
     const completion = await client.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })),
+      model: "openai/gpt-oss-20b:free",
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful medical assistant. IMPORTANT: Format your responses using clean numbered lists (1. 2. 3.) and bullet points without asterisks (*). Never use asterisks (*) in your responses. Use proper spacing between sections. Make your responses look professional and aesthetic. Keep responses concise and informative.'
+        },
+        ...messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      ],
       temperature: 0.7,
       max_tokens: 1000
     });
@@ -45,7 +51,15 @@ export async function handleChatMessage(req: Request, res: Response) {
       throw new Error('Invalid response format from OpenRouter');
     }
 
-    const responseText = completion.choices[0].message.content;
+    let responseText = completion.choices[0].message.content;
+    
+    // Post-process the response to remove asterisks and improve formatting
+    responseText = responseText
+      .replace(/\*\s*/g, '') // Remove asterisks and spaces after them
+      .replace(/^\s*[\*\-]\s*/gm, '• ') // Convert remaining bullet points to clean bullets
+      .replace(/\n\s*\n/g, '\n\n') // Clean up extra line breaks
+      .trim();
+    
     console.log('Sending response to client:', responseText);
     
     return res.status(200).json({

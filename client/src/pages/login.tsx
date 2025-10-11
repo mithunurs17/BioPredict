@@ -68,7 +68,7 @@ export default function Login() {
               </CardTitle>
             </motion.div>
             <CardDescription className="text-center text-zinc-400">
-              Sign in to access your DiseaseDetect dashboard
+              Sign in to access your BioPredict dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>

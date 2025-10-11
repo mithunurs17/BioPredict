@@ -9,13 +9,23 @@ import { toast } from '@/hooks/use-toast';
 import OpenAI from 'openai';
 import { TextToSpeech } from '@/components/text-to-speech';
 
+// Helper function to read file as base64
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 // Initialize OpenAI client with OpenRouter
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: "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",
+  apiKey: "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",
   defaultHeaders: {
     "HTTP-Referer": "http://localhost:5000",
-    "X-Title": "DiseaseDetect",
+    "X-Title": "BioPredict",
   },
   dangerouslyAllowBrowser: true, // Add this flag to allow browser usage
   timeout: 15000, // Set a 15-second timeout for all requests
@@ -51,7 +61,7 @@ export function AIChatbot() {
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
   
   // Speech recognition setup
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
 
   // Initialize speech recognition and voice synthesis
   useEffect(() => {
@@ -69,7 +79,7 @@ export function AIChatbot() {
         recognitionRef.current.interimResults = false;
         recognitionRef.current.lang = 'en-US';
 
-        recognitionRef.current.onresult = (event) => {
+        recognitionRef.current.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
           setInputValue(transcript);
           // Auto-send after voice input
@@ -78,7 +88,7 @@ export function AIChatbot() {
           }, 500);
         };
 
-        recognitionRef.current.onerror = (event) => {
+        recognitionRef.current.onerror = (event: any) => {
           console.error('Speech recognition error', event.error);
           setIsListening(false);
           toast({
@@ -434,12 +444,13 @@ export function AIChatbot() {
     });
   };
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent, transcript?: string) => {
     if (e) {
       e.preventDefault();
     }
     
-    if (!inputValue.trim() && !uploadedFile) {
+    const messageText = transcript || inputValue;
+    if (!messageText.trim() && !uploadedFile) {
       return;
     }
     
@@ -450,8 +461,12 @@ export function AIChatbot() {
     
     const userMessage = {
       role: 'user' as const,
-      content: inputValue,
-      file: uploadedFile
+      content: messageText,
+      file: uploadedFile ? {
+        name: uploadedFile.name,
+        type: uploadedFile.type,
+        url: URL.createObjectURL(uploadedFile)
+      } : undefined
     };
     
     // Update messages state with user message
@@ -467,32 +482,38 @@ export function AIChatbot() {
         userMessage
       ];
       
-      // Prepare the messages for the API call
-      const messagesToSend = updatedMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      // Prepare the messages for the API call with system message
+      const messagesToSend = [
+        {
+          role: 'system',
+          content: 'You are a helpful medical assistant. IMPORTANT: Format your responses using clean numbered lists (1. 2. 3.) and bullet points without asterisks (*). Never use asterisks (*) in your responses. Use proper spacing between sections. Make your responses look professional and aesthetic. Keep responses concise and informative.'
+        },
+        ...updatedMessages.map(msg => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content
+        }))
+      ];
       
       // If there's an uploaded file, add it to the last message
-      if (userMessage.file) {
-        const fileContent = await readFileAsBase64(userMessage.file);
+      if (uploadedFile) {
+        const fileContent = await readFileAsBase64(uploadedFile);
         
         // Add the file content to the last message
         if (messagesToSend.length > 0) {
           const lastMessage = messagesToSend[messagesToSend.length - 1];
           lastMessage.content += `
 
-Attached file: ${userMessage.file.name}`;
+Attached file: ${uploadedFile.name}`;
           // You would need to handle the file content appropriately here
           // This is just a placeholder
         }
       }
       
       // Try models in order until one works
-      let completion = null;
-      let error = null;
+      let completion: any = null;
+      let error: any = null;
       
-      for (const model of ['gpt-4', 'gpt-3.5-turbo']) {
+      for (const model of ['openai/gpt-oss-20b:free']) {
         try {
           // Set a timeout for the API call
           const timeoutPromise = new Promise((_, reject) => 
@@ -501,7 +522,7 @@ Attached file: ${userMessage.file.name}`;
           
           const responsePromise = client.chat.completions.create({
             model,
-            messages: messagesToSend,
+            messages: messagesToSend as any,
             temperature: 0.7,
             stream: false
           });
@@ -527,7 +548,15 @@ Attached file: ${userMessage.file.name}`;
         throw error || new Error('Failed to get a response from any model');
       }
 
-      const responseText = completion.choices[0].message.content;
+      let responseText = completion.choices[0].message.content;
+      
+      // Post-process the response to remove asterisks and improve formatting
+      responseText = responseText
+        .replace(/\*\s*/g, '') // Remove asterisks and spaces after them
+        .replace(/^\s*[\*\-]\s*/gm, '• ') // Convert remaining bullet points to clean bullets
+        .replace(/\n\s*\n/g, '\n\n') // Clean up extra line breaks
+        .trim();
+      
       console.log('Final response text:', responseText);
       
       const assistantMessage = {
@@ -735,7 +764,7 @@ Attached file: ${userMessage.file.name}`;
 // Add TypeScript interface for SpeechRecognition
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
   }
 }

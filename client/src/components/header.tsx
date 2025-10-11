@@ -36,7 +36,7 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/">
-            <span className="text-xl font-bold text-white">DiseaseDetect</span>
+            <span className="text-xl font-bold text-white">BioPredict</span>
           </Link>
           
           <nav className="hidden md:flex gap-6">
