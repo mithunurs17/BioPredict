@@ -1,0 +1,1 @@
+BioPredict is a comprehensive web-based healthcare platform that leverages machine learning and AI to analyze biomarker data from various biological fluids and predict disease risks. The platform provides personalized health insights and recommendations through an intuitive, modern interface.
