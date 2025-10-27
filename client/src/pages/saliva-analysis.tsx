@@ -24,14 +24,14 @@ export default function SalivaAnalysisPage() {
   const form = useForm<SalivaBiomarkerForm>({
     resolver: zodResolver(SalivaBiomarkerFormSchema),
     defaultValues: {
-      il6Level: 2.5,
-      tnfAlpha: 10,
-      mmp9: 30,
-      cd44: 45,
-      cyfra21: 1.8,
-      age: 35,
+      il6Level: undefined,
+      tnfAlpha: undefined,
+      mmp9: undefined,
+      cd44: undefined,
+      cyfra21: undefined,
+      age: undefined,
       isSmoker: false,
-      alcoholConsumption: 1,
+      alcoholConsumption: undefined,
       hasFamilyHistory: false
     },
   });

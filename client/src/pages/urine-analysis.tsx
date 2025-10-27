@@ -24,21 +24,21 @@ export default function UrineAnalysisPage() {
   const form = useForm<UrineBiomarkerForm>({
     resolver: zodResolver(UrineBiomarkerFormSchema),
     defaultValues: {
-      urineAlbumin: 10,
-      urineCreatinine: 150,
-      albumin2CreatinineRatio: 10,
-      urineGlucose: 0,
-      specificGravity: 1.020,
-      bloodUreaNitrogen: 15,
-      urineProtein: 0,
-      ph: 6.0,
-      ngal: 15,
-      kim1: 0.5,
-      age: 35,
+      urineAlbumin: undefined,
+      urineCreatinine: undefined,
+      albumin2CreatinineRatio: undefined,
+      urineGlucose: undefined,
+      specificGravity: undefined,
+      bloodUreaNitrogen: undefined,
+      urineProtein: undefined,
+      ph: undefined,
+      ngal: undefined,
+      kim1: undefined,
+      age: undefined,
       hasHypertension: false,
       hasDiabetes: false,
-      weight: 70,
-      height: 170
+      weight: undefined,
+      height: undefined
     },
   });
   

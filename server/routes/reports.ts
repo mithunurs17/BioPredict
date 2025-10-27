@@ -33,6 +33,8 @@ router.post('/upload', authenticateToken, async (req: Request, res: Response) =>
     const userId = (req as any).user.id;
 
     const reportId = await saveReportToDatabase(userId, fileName, fileType, fileSize, reportType, aiSummary);
+    
+    await saveBiomarkerRecord(userId, reportType, aiSummary);
 
     res.json({ 
       message: 'Report uploaded and processed successfully',
@@ -69,42 +71,125 @@ async function saveReportToDatabase(
   }
 }
 
+async function saveBiomarkerRecord(
+  userId: string,
+  reportType: string,
+  aiSummary: any
+): Promise<void> {
+  const { PrismaClient } = await import('@prisma/client');
+  const prisma = new PrismaClient();
+  
+  try {
+    const biomarkers: any = {};
+    if (aiSummary.extractedBiomarkers && Array.isArray(aiSummary.extractedBiomarkers)) {
+      aiSummary.extractedBiomarkers.forEach((biomarker: any) => {
+        if (biomarker.name && biomarker.value !== undefined && biomarker.value !== null) {
+          biomarkers[biomarker.name] = {
+            value: biomarker.value,
+            unit: biomarker.unit || '',
+            status: biomarker.status || 'unknown',
+            normalRange: biomarker.normalRange || ''
+          };
+        }
+      });
+    }
+    
+    const predictions = {
+      aiAnalysis: {
+        summary: aiSummary.summary || '',
+        overallRiskLevel: aiSummary.overallRiskLevel || 'unknown',
+        detailedDescription: aiSummary.detailedDescription || '',
+        riskAnalysis: aiSummary.riskAnalysis || {},
+        keyFindings: aiSummary.keyFindings || [],
+        recommendations: aiSummary.recommendations || [],
+        lifestyleFactors: aiSummary.lifestyleFactors || [],
+        followUpTests: aiSummary.followUpTests || []
+      }
+    };
+    
+    await prisma.biomarkerRecord.create({
+      data: {
+        userId: userId,
+        fluidType: reportType,
+        biomarkers: biomarkers,
+        predictions: predictions
+      }
+    });
+    
+    console.log('Biomarker record saved from report upload');
+  } catch (error) {
+    console.error('Error saving biomarker record:', error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 async function processReportWithAI(fileContent: string, reportType: string, fileType: string): Promise<any> {
   if (!openai) {
     throw new Error('OpenAI not configured');
   }
 
-  const prompt = `You are a medical AI assistant analyzing a ${reportType} lab report in ${fileType} format. 
-Extract and summarize the key biomarkers and health indicators from this report.
+  const prompt = `You are an expert medical AI assistant analyzing a ${reportType} biomarker lab report. 
+Provide a comprehensive analysis including detailed risk assessment and health implications.
 
-Report content or description: ${fileContent}
+Report content: ${fileContent}
 
 Please provide a detailed JSON response with the following structure:
 {
-  "summary": "A brief 2-3 sentence overview of the report findings",
+  "summary": "A comprehensive 3-5 sentence summary of the overall health status based on the report findings, highlighting the most critical aspects",
   "extractedBiomarkers": [
     {
       "name": "Biomarker name",
       "value": "measured value",
       "unit": "unit of measurement",
-      "status": "normal/high/low",
-      "normalRange": "normal range for this biomarker"
+      "status": "normal/borderline/high/low/critical",
+      "normalRange": "normal reference range",
+      "significance": "Brief explanation of what this biomarker indicates"
     }
   ],
+  "overallRiskLevel": "low/moderate/high/critical",
+  "detailedDescription": "A thorough 4-6 sentence analysis explaining what the biomarker results mean for the patient's health, including physiological implications and potential health impacts",
+  "riskAnalysis": {
+    "primaryConcerns": [
+      "Specific health concern 1 with severity level",
+      "Specific health concern 2 with severity level"
+    ],
+    "diseaseRisks": [
+      {
+        "disease": "Disease name",
+        "riskLevel": "low/moderate/high/critical",
+        "indicators": "Which biomarkers suggest this risk",
+        "explanation": "Detailed explanation of why these biomarkers indicate this disease risk"
+      }
+    ],
+    "immediateActions": [
+      "Urgent action 1 if any critical values found",
+      "Urgent action 2"
+    ]
+  },
   "keyFindings": [
-    "Finding 1",
-    "Finding 2"
+    "Detailed finding 1 with clinical significance",
+    "Detailed finding 2 with clinical significance",
+    "Detailed finding 3 with clinical significance"
   ],
   "recommendations": [
-    "Recommendation 1",
-    "Recommendation 2"
+    {
+      "category": "lifestyle/medication/monitoring/consultation",
+      "action": "Specific recommendation",
+      "priority": "high/medium/low",
+      "rationale": "Why this is recommended based on the biomarkers"
+    }
   ],
-  "riskFactors": [
-    "Risk factor 1 if any"
+  "lifestyleFactors": [
+    "Lifestyle factor to address based on results (diet, exercise, sleep, stress, etc.)"
+  ],
+  "followUpTests": [
+    "Suggested follow-up test 1 based on abnormal findings",
+    "Suggested follow-up test 2"
   ]
 }
 
-Be thorough and extract as much relevant medical data as possible.`;
+Be extremely thorough and provide clinically relevant insights. Extract all biomarker values and provide detailed health risk analysis.`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -112,14 +197,15 @@ Be thorough and extract as much relevant medical data as possible.`;
       messages: [
         {
           role: "system",
-          content: "You are a medical AI assistant that analyzes lab reports and extracts biomarker data. Always respond with valid JSON only."
+          content: "You are an expert medical AI assistant specializing in clinical laboratory analysis and disease risk assessment. Analyze lab reports thoroughly and provide detailed, actionable health insights with comprehensive risk analysis. Always respond with valid JSON only."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.3,
+      temperature: 0.2,
+      response_format: { type: "json_object" }
     });
 
     const response = completion.choices[0].message.content || '{}';
@@ -129,11 +215,19 @@ Be thorough and extract as much relevant medical data as possible.`;
   } catch (error: any) {
     console.error('Error processing report with AI:', error);
     return {
-      summary: "Unable to process report automatically",
+      summary: "Unable to process report automatically. Please consult with your healthcare provider.",
       extractedBiomarkers: [],
-      keyFindings: ["Manual review required"],
-      recommendations: ["Please review the report manually"],
-      riskFactors: []
+      overallRiskLevel: "unknown",
+      detailedDescription: "The AI system encountered an error while processing your report. This does not indicate a problem with your results.",
+      riskAnalysis: {
+        primaryConcerns: ["Manual review required by healthcare professional"],
+        diseaseRisks: [],
+        immediateActions: ["Please consult with your healthcare provider for proper interpretation"]
+      },
+      keyFindings: ["Automatic analysis unavailable - manual review needed"],
+      recommendations: [],
+      lifestyleFactors: [],
+      followUpTests: []
     };
   }
 }
