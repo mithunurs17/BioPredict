@@ -12,6 +12,10 @@ import { Activity, Calendar, User, Beaker } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/animated-background';
 import { HealthInsights } from '@/components/dashboard/health-insights';
 import { Button } from '@/components/ui/button';
+import { BioAvatar } from '@/components/dashboard/bio-avatar';
+import { LifestyleSimulator } from '@/components/dashboard/lifestyle-simulator';
+import { RiskProjectionChart } from '@/components/dashboard/risk-projection-chart';
+import { HealthInsightCard, type HealthInsight } from '@/components/dashboard/health-insight-card';
 
 type BiomarkerRecord = {
   id: string;
@@ -96,6 +100,34 @@ export default function DashboardPage() {
   const urineRecords = records.filter(record => record.fluidType === 'urine');
   const csfRecords = records.filter(record => record.fluidType === 'csf');
 
+  // Sample health insights
+  const healthInsights: HealthInsight[] = [
+    {
+      title: "Great Blood Sugar Control",
+      text: "Your glucose levels have remained stable over the past month. Keep up the excellent work with your diet and exercise routine!",
+      type: "positive",
+      biomarkers: ["Glucose", "HbA1c"]
+    },
+    {
+      title: "Hydration Recommendation",
+      text: "Your urine analysis suggests you could benefit from increased water intake. Aim for 8-10 glasses per day for optimal kidney function.",
+      type: "tip",
+      biomarkers: ["Specific Gravity", "Urine Color"]
+    },
+    {
+      title: "Monitor Cholesterol",
+      text: "Your LDL cholesterol is approaching the upper normal range. Consider adding more omega-3 fatty acids to your diet and increasing cardiovascular exercise.",
+      type: "warning",
+      biomarkers: ["LDL", "Total Cholesterol"]
+    },
+    {
+      title: "Sleep Quality Connection",
+      text: "Studies show that improving sleep quality can lower stress hormones. Your cortisol levels indicate this could be beneficial for you.",
+      type: "info",
+      biomarkers: ["Cortisol", "Sleep Duration"]
+    }
+  ];
+
   return (
     <>
       <Header />
@@ -160,6 +192,38 @@ export default function DashboardPage() {
                         : 'No analyses yet'}
                     </p>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* New Enhanced Features Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+            >
+              <div className="lg:col-span-1">
+                <BioAvatar healthScore={75} riskLevel="low" />
+              </div>
+              <div className="lg:col-span-2">
+                <RiskProjectionChart />
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.38, duration: 0.5 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+            >
+              <LifestyleSimulator />
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-purple-200 mb-4">Health Detective Insights</h3>
+                <div className="grid gap-4">
+                  {healthInsights.map((insight, index) => (
+                    <HealthInsightCard key={index} insight={insight} index={index} />
+                  ))}
                 </div>
               </div>
             </motion.div>
