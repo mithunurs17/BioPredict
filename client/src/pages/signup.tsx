@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { AlertCircle, UserPlus, Mail, Lock, User, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { motion } from 'framer-motion';
 import { AnimatedBackground } from '@/components/ui/animated-background';
@@ -51,6 +51,15 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <AnimatedBackground />
+      <Button
+        variant="ghost"
+        className="absolute top-4 left-4 z-20 text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-800/50"
+        onClick={() => setLocation('/')}
+        data-testid="button-home"
+      >
+        <Home className="w-5 h-5 mr-2" />
+        Home
+      </Button>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
