@@ -72,3 +72,31 @@ export const insertDiseaseSchema = createInsertSchema(diseases).pick({
 
 export type InsertDisease = z.infer<typeof insertDiseaseSchema>;
 export type Disease = typeof diseases.$inferSelect;
+
+// Medical Reports - for uploaded lab reports
+export const medicalReports = pgTable("medical_reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(), // pdf, jpg, png
+  fileSize: integer("file_size").notNull(), // in bytes
+  reportType: text("report_type").notNull(), // blood, saliva, urine, csf
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  aiSummary: jsonb("ai_summary"), // AI-generated summary and extracted data
+  status: text("status").notNull().default("processing"), // processing, completed, failed
+});
+
+export const insertMedicalReportSchema = createInsertSchema(medicalReports).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export type InsertMedicalReport = z.infer<typeof insertMedicalReportSchema>;
+export type MedicalReport = typeof medicalReports.$inferSelect;
+
+export const medicalReportsRelations = relations(medicalReports, ({ one }) => ({
+  user: one(users, {
+    fields: [medicalReports.userId],
+    references: [users.id]
+  })
+}));

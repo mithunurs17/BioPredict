@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import OpenAI from 'openai';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
-let openai = null;
+let openai: OpenAI | null = null;
 
 // Only initialize OpenAI if API key is available
 if (process.env.OPENAI_API_KEY) {
@@ -15,7 +15,7 @@ if (process.env.OPENAI_API_KEY) {
 }
 
 // Existing chat endpoint
-router.post('/chat', async (req, res) => {
+router.post('/chat', async (req: Request, res: Response) => {
   console.log('Chat endpoint hit! Request body:', req.body);
   
   if (!openai) {
@@ -40,7 +40,7 @@ router.post('/chat', async (req, res) => {
       })),
     });
 
-    let responseText = completion.choices[0].message.content;
+    let responseText = completion.choices[0].message.content || '';
     
     // Post-process the response to remove asterisks and improve formatting
     responseText = responseText
@@ -51,14 +51,14 @@ router.post('/chat', async (req, res) => {
     
     console.log('Sending response:', { response: responseText });
     res.json({ response: responseText });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({ message: 'Error processing chat request', error: error.message });
   }
 });
 
 // New health insights endpoint
-router.post('/analyze-health', authenticateToken, async (req, res) => {
+router.post('/analyze-health', authenticateToken, async (req: Request, res: Response) => {
   if (!openai) {
     return res.status(503).json({ 
       message: 'AI analysis is not configured. Please add OPENAI_API_KEY to your environment variables.' 
@@ -93,11 +93,11 @@ router.post('/analyze-health', authenticateToken, async (req, res) => {
       ],
     });
 
-    const response = completion.choices[0].message.content;
+    const response = completion.choices[0].message.content || '[]';
     const insights = JSON.parse(response);
 
     res.json({ insights });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in analyze-health endpoint:', error);
     res.status(500).json({ message: 'Error analyzing health data' });
   }

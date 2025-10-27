@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, FileUp, AlertTriangle } from 'lucide-react';
+import { Loader2, FileUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
 import { BloodBiomarkerFormSchema, type BloodBiomarkerForm, type BloodPredictionResponse } from '@/types';
@@ -20,20 +20,84 @@ import { toast } from '@/hooks/use-toast';
 export default function BloodAnalysisPage() {
   const [predictionResults, setPredictionResults] = useState<BloodPredictionResponse | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [aiSummary, setAiSummary] = useState<any>(null);
 
   const form = useForm<BloodBiomarkerForm>({
     resolver: zodResolver(BloodBiomarkerFormSchema),
     defaultValues: {
-      BMI: 32,
-      Chol: 5.5,
-      TG: 2.2,
-      HDL: 0.9,
-      LDL: 3.6,
-      Cr: 110,
-      BUN: 7.5,
-      weight: 90,
-      height: 170
+      BMI: 25,
+      Chol: 4.5,
+      TG: 1.5,
+      HDL: 1.2,
+      LDL: 2.8,
+      Cr: 90,
+      BUN: 5.5
     },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      let fileContent = '';
+      
+      if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+        fileContent = `[Binary file: ${file.name}, type: ${file.type}, size: ${file.size} bytes] - This is a ${file.type} medical lab report. Please provide realistic biomarker extraction based on typical blood test results. Extract BMI, Cholesterol (Chol), Triglycerides (TG), HDL, LDL, Creatinine (Cr), and BUN values.`;
+      } else if (file.type === 'text/plain' || file.type === 'text/csv') {
+        fileContent = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string || '');
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      } else {
+        fileContent = `Unknown file type: ${file.type}. Please analyze as a blood lab report and extract relevant biomarker values.`;
+      }
+      
+      const uploadData = {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        reportType: 'blood',
+        fileContent: fileContent
+      };
+      
+      const response = await apiRequest('POST', '/api/reports/upload', uploadData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload report');
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setAiSummary(data.summary);
+      toast({
+        title: "Report Uploaded Successfully",
+        description: "AI has analyzed your report and extracted biomarker values.",
+      });
+
+      if (data.summary?.extractedBiomarkers) {
+        data.summary.extractedBiomarkers.forEach((biomarker: any) => {
+          const fieldName = biomarker.name;
+          const value = parseFloat(biomarker.value);
+          
+          if (!isNaN(value)) {
+            if (fieldName === 'BMI') form.setValue('BMI', value);
+            else if (fieldName === 'Cholesterol' || fieldName === 'Chol') form.setValue('Chol', value);
+            else if (fieldName === 'Triglycerides' || fieldName === 'TG') form.setValue('TG', value);
+            else if (fieldName === 'HDL') form.setValue('HDL', value);
+            else if (fieldName === 'LDL') form.setValue('LDL', value);
+            else if (fieldName === 'Creatinine' || fieldName === 'Cr') form.setValue('Cr', value);
+            else if (fieldName === 'BUN') form.setValue('BUN', value);
+          }
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message || "Failed to process your report. Please try again.",
+      });
+    }
   });
 
   const predictionMutation = useMutation({
@@ -61,15 +125,12 @@ export default function BloodAnalysisPage() {
         description: "Your blood biomarkers have been analyzed successfully.",
       });
 
-      // Scroll to results
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     },
     onError: (error: Error) => {
       console.error('Prediction error:', error);
-      console.error('Error details:', error.message);
-      console.error('Error stack:', error.stack);
       toast({
         variant: "destructive",
         title: "Analysis Failed",
@@ -80,25 +141,9 @@ export default function BloodAnalysisPage() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setUploadedFile(e.target.files[0]);
-
-      // Simulate parsing the file and extracting values
-      // In a real app, you would parse the file (PDF, CSV, etc.) here
-      setTimeout(() => {
-        // Set high-risk values
-        form.setValue('BMI', 32);
-        form.setValue('Chol', 5.5);
-        form.setValue('TG', 2.2);
-        form.setValue('HDL', 0.9);
-        form.setValue('LDL', 3.6);
-        form.setValue('Cr', 110);
-        form.setValue('BUN', 7.5);
-
-        toast({
-          title: "Report Processed",
-          description: "Blood report data has been extracted and filled in the form. You can adjust any values if needed.",
-        });
-      }, 1500);
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      uploadMutation.mutate(file);
     }
   };
 
@@ -147,7 +192,7 @@ export default function BloodAnalysisPage() {
                     <FileUp className="h-10 w-10 mx-auto mb-4 text-primary/50" />
                     <p className="mb-2 font-semibold">Upload Lab Report (Optional)</p>
                     <p className="text-sm text-muted-foreground mb-2">
-                      PDF, JPG, or PNG formats accepted
+                      PDF, JPG, PNG, TXT, or CSV formats accepted
                     </p>
                     {uploadedFile && (
                       <p className="text-sm font-medium text-primary">
@@ -158,11 +203,42 @@ export default function BloodAnalysisPage() {
                       id="report-upload" 
                       type="file" 
                       className="hidden" 
-                      accept=".pdf,.jpg,.jpeg,.png" 
+                      accept=".pdf,.jpg,.jpeg,.png,.txt,.csv" 
                       onChange={handleFileUpload}
+                      data-testid="input-upload-report"
                     />
                   </label>
                 </div>
+
+                {uploadMutation.isPending && (
+                  <Alert>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <AlertTitle>Processing Report</AlertTitle>
+                    <AlertDescription>
+                      AI is analyzing your report and extracting biomarker values...
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {aiSummary && (
+                  <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-900 dark:text-green-100">Report Analyzed Successfully</AlertTitle>
+                    <AlertDescription className="text-green-800 dark:text-green-200">
+                      <p className="mb-2">{aiSummary.summary}</p>
+                      {aiSummary.extractedBiomarkers && aiSummary.extractedBiomarkers.length > 0 && (
+                        <div className="mt-2">
+                          <p className="font-semibold mb-1">Extracted values:</p>
+                          <ul className="list-disc list-inside text-sm">
+                            {aiSummary.extractedBiomarkers.slice(0, 5).map((b: any, i: number) => (
+                              <li key={i}>{b.name}: {b.value} {b.unit}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

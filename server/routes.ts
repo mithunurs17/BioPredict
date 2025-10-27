@@ -8,6 +8,7 @@ import { Router } from 'express';
 import authRoutes from './routes/auth';
 import predictionRoutes from './routes/prediction';
 import aiRoutes from './routes/ai';
+import reportsRoutes from './routes/reports';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/auth', authRoutes);
 
 // Protected routes
 router.use('/predictions', authenticateToken, predictionRoutes);
+router.use('/reports', reportsRoutes);
 
 // AI Chatbot routes
 router.use('/ai', aiRoutes);
