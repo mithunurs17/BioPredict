@@ -4,14 +4,26 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+let openai = null;
+
+// Only initialize OpenAI if API key is available
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+  });
+}
 
 // Existing chat endpoint
 router.post('/chat', async (req, res) => {
   console.log('Chat endpoint hit! Request body:', req.body);
+  
+  if (!openai) {
+    return res.status(503).json({ 
+      error: 'AI chat is not configured. Please add OPENAI_API_KEY to your environment variables.' 
+    });
+  }
+  
   try {
     const { messages } = req.body;
     
@@ -47,6 +59,12 @@ router.post('/chat', async (req, res) => {
 
 // New health insights endpoint
 router.post('/analyze-health', authenticateToken, async (req, res) => {
+  if (!openai) {
+    return res.status(503).json({ 
+      message: 'AI analysis is not configured. Please add OPENAI_API_KEY to your environment variables.' 
+    });
+  }
+  
   try {
     const { analysisData } = req.body;
 
