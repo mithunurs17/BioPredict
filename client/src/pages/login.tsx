@@ -1,33 +1,40 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, LogIn, Mail, Lock, Home } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
-import { motion } from 'framer-motion';
-import { AnimatedBackground } from '@/components/ui/animated-background';
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, LogIn, Mail, Lock, Home } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { motion } from "framer-motion";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -35,13 +42,15 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || "Login failed");
       }
 
       login(data.token, data.user);
-      setLocation('/dashboard');
+      setLocation("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      setError(
+        err instanceof Error ? err.message : "An error occurred during login",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +62,7 @@ export default function Login() {
       <Button
         variant="ghost"
         className="absolute top-4 left-4 z-20 text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-800/50"
-        onClick={() => setLocation('/')}
+        onClick={() => setLocation("/home")}
         data-testid="button-home"
       >
         <Home className="w-5 h-5 mr-2" />
@@ -88,7 +97,10 @@ export default function Login() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
+                  <Alert
+                    variant="destructive"
+                    className="bg-red-500/10 border-red-500/20"
+                  >
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
@@ -100,7 +112,9 @@ export default function Login() {
                 transition={{ delay: 0.3, duration: 0.5 }}
                 className="space-y-2"
               >
-                <Label htmlFor="email" className="text-zinc-300">Email</Label>
+                <Label htmlFor="email" className="text-zinc-300">
+                  Email
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-5 w-5 text-zinc-500" />
                   <Input
@@ -120,7 +134,9 @@ export default function Login() {
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="space-y-2"
               >
-                <Label htmlFor="password" className="text-zinc-300">Password</Label>
+                <Label htmlFor="password" className="text-zinc-300">
+                  Password
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-zinc-500" />
                   <Input
@@ -161,11 +177,11 @@ export default function Login() {
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-zinc-400">
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Button
                 variant="link"
                 className="p-0 text-fuchsia-400 hover:text-fuchsia-300"
-                onClick={() => setLocation('/signup')}
+                onClick={() => setLocation("/signup")}
               >
                 Sign up
               </Button>
