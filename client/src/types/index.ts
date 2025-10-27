@@ -6,15 +6,24 @@ export type FluidType = "blood" | "saliva" | "urine" | "csf";
 // Factor Types for Risk Assessment
 export type FactorType = "positive" | "negative" | "warning";
 
-// Blood Biomarker Form Schema
+// Blood Biomarker Form Schema - preprocessed to handle empty strings and ensure valid numbers
+const numberField = (min: number, max: number, fieldName: string) =>
+  z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+    z.number({
+      required_error: `${fieldName} is required`,
+      invalid_type_error: `${fieldName} must be a number`
+    }).min(min, `${fieldName} must be at least ${min}`).max(max, `${fieldName} must be at most ${max}`)
+  );
+
 export const BloodBiomarkerFormSchema = z.object({
-  BMI: z.number().min(10).max(50),
-  Chol: z.number().min(1).max(10),
-  TG: z.number().min(0.1).max(5),
-  HDL: z.number().min(0.1).max(5),
-  LDL: z.number().min(0.1).max(5),
-  Cr: z.number().min(10).max(200),
-  BUN: z.number().min(1).max(20)
+  BMI: numberField(10, 50, "BMI"),
+  Chol: numberField(1, 10, "Cholesterol"),
+  TG: numberField(0.1, 5, "Triglycerides"),
+  HDL: numberField(0.1, 5, "HDL"),
+  LDL: numberField(0.1, 5, "LDL"),
+  Cr: numberField(10, 200, "Creatinine"),
+  BUN: numberField(1, 20, "BUN")
 });
 
 export type BloodBiomarkerForm = z.infer<typeof BloodBiomarkerFormSchema>;

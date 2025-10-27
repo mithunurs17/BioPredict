@@ -17,6 +17,8 @@ router.post('/upload', authenticateToken, async (req: Request, res: Response) =>
   try {
     const { fileName, fileType, fileSize, reportType, fileContent } = req.body;
 
+    console.log('Report upload request:', { fileName, fileType, reportType, fileSize, contentLength: fileContent?.length });
+
     if (!fileName || !fileType || !reportType || !fileContent) {
       return res.status(400).json({ 
         message: 'Missing required fields: fileName, fileType, reportType, and fileContent are required' 
@@ -29,17 +31,19 @@ router.post('/upload', authenticateToken, async (req: Request, res: Response) =>
       });
     }
 
+    console.log('Processing report with AI...');
     const aiSummary = await processReportWithAI(fileContent, reportType, fileType);
     const userId = (req as any).user.id;
 
-    const reportId = await saveReportToDatabase(userId, fileName, fileType, fileSize, reportType, aiSummary);
-    
-    await saveBiomarkerRecord(userId, reportType, aiSummary);
+    console.log('Saving biomarker record...');
+    const recordId = await saveBiomarkerRecord(userId, reportType, aiSummary, fileName);
+
+    console.log('Report processed successfully, recordId:', recordId);
 
     res.json({ 
       message: 'Report uploaded and processed successfully',
       summary: aiSummary,
-      reportId: reportId
+      recordId: recordId
     });
   } catch (error: any) {
     console.error('Error uploading report:', error);
@@ -47,35 +51,12 @@ router.post('/upload', authenticateToken, async (req: Request, res: Response) =>
   }
 });
 
-async function saveReportToDatabase(
-  userId: string,
-  fileName: string,
-  fileType: string,
-  fileSize: number,
-  reportType: string,
-  aiSummary: any
-): Promise<number> {
-  const { PrismaClient } = await import('@prisma/client');
-  const prisma = new PrismaClient();
-  
-  try {
-    const result = await prisma.$queryRaw`
-      INSERT INTO "MedicalReport" ("userId", "fileName", "fileType", "fileSize", "reportType", "uploadedAt", "aiSummary", "status")
-      VALUES (${userId}, ${fileName}, ${fileType}, ${fileSize}, ${reportType}, NOW(), ${JSON.stringify(aiSummary)}::jsonb, 'completed')
-      RETURNING id
-    ` as Array<{ id: number }>;
-    
-    return result[0].id;
-  } finally {
-    await prisma.$disconnect();
-  }
-}
-
 async function saveBiomarkerRecord(
   userId: string,
   reportType: string,
-  aiSummary: any
-): Promise<void> {
+  aiSummary: any,
+  fileName?: string
+): Promise<string> {
   const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient();
   
@@ -104,10 +85,11 @@ async function saveBiomarkerRecord(
         recommendations: aiSummary.recommendations || [],
         lifestyleFactors: aiSummary.lifestyleFactors || [],
         followUpTests: aiSummary.followUpTests || []
-      }
+      },
+      reportFileName: fileName || 'Uploaded report'
     };
     
-    await prisma.biomarkerRecord.create({
+    const record = await prisma.biomarkerRecord.create({
       data: {
         userId: userId,
         fluidType: reportType,
@@ -116,9 +98,11 @@ async function saveBiomarkerRecord(
       }
     });
     
-    console.log('Biomarker record saved from report upload');
+    console.log('Biomarker record saved from report upload, ID:', record.id);
+    return record.id;
   } catch (error) {
     console.error('Error saving biomarker record:', error);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }

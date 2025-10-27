@@ -25,13 +25,13 @@ export default function BloodAnalysisPage() {
   const form = useForm<BloodBiomarkerForm>({
     resolver: zodResolver(BloodBiomarkerFormSchema),
     defaultValues: {
-      BMI: undefined,
-      Chol: undefined,
-      TG: undefined,
-      HDL: undefined,
-      LDL: undefined,
-      Cr: undefined,
-      BUN: undefined
+      BMI: "" as any,
+      Chol: "" as any,
+      TG: "" as any,
+      HDL: "" as any,
+      LDL: "" as any,
+      Cr: "" as any,
+      BUN: "" as any
     },
   });
 
