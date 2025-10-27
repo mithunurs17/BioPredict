@@ -1,13 +1,13 @@
 import express from 'express';
-import { Configuration, OpenAIApi } from 'openai';
-import auth from '../middleware/auth.js';
+import OpenAI from 'openai';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const configuration = new Configuration({
-  apiKey: "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",
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
 });
-const openai = new OpenAIApi(configuration);
 
 // Existing chat endpoint
 router.post('/chat', async (req, res) => {
@@ -20,7 +20,7 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format. Expected an array of messages.' });
     }
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "openai/gpt-oss-20b:free",
       messages: messages.map(msg => ({
         role: msg.role,
@@ -28,7 +28,7 @@ router.post('/chat', async (req, res) => {
       })),
     });
 
-    let responseText = completion.data.choices[0].message.content;
+    let responseText = completion.choices[0].message.content;
     
     // Post-process the response to remove asterisks and improve formatting
     responseText = responseText
@@ -46,7 +46,7 @@ router.post('/chat', async (req, res) => {
 });
 
 // New health insights endpoint
-router.post('/analyze-health', auth, async (req, res) => {
+router.post('/analyze-health', authenticateToken, async (req, res) => {
   try {
     const { analysisData } = req.body;
 
@@ -61,7 +61,7 @@ router.post('/analyze-health', auth, async (req, res) => {
     
     Provide 3-5 most relevant insights.`;
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "openai/gpt-oss-20b:free",
       messages: [
         {
@@ -75,7 +75,7 @@ router.post('/analyze-health', auth, async (req, res) => {
       ],
     });
 
-    const response = completion.data.choices[0].message.content;
+    const response = completion.choices[0].message.content;
     const insights = JSON.parse(response);
 
     res.json({ insights });
@@ -85,4 +85,4 @@ router.post('/analyze-health', auth, async (req, res) => {
   }
 });
 
-export default router; 
+export default router;
