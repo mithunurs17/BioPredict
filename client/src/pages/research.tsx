@@ -38,10 +38,6 @@ export default function Research() {
                 <FileText className="mr-2 h-4 w-4" />
                 <span>Publications</span>
               </TabsTrigger>
-              <TabsTrigger value="partnerships" className="data-[state=active]:bg-primary/10 py-3">
-                <MessagesSquare className="mr-2 h-4 w-4" />
-                <span>Partnerships</span>
-              </TabsTrigger>
               <TabsTrigger value="references" className="data-[state=active]:bg-primary/10 py-3">
                 <Book className="mr-2 h-4 w-4" />
                 <span>References</span>
@@ -151,65 +147,21 @@ export default function Research() {
                 <CardHeader>
                   <CardTitle>Recent Publications</CardTitle>
                   <CardDescription>
-                    Research papers and articles by our team and collaborators
+                    Research papers and articles by our team
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-5">
                     <div className="border-b pb-5">
-                      <h3 className="font-semibold mb-2">Machine Learning-Based Prediction of Diabetes Risk Using Multiple Biomarkers</h3>
+                      <h3 className="font-semibold mb-2">AI-Powered Detection of Body Fluid Markers for Early 
+Warning of Lifestyle Diseases</h3>
                       <p className="text-sm text-muted-foreground mb-2">
-                        Journal of Biomedical Informatics (2025)
+                       IEEE 5th International Conference on ICT in Business, Industry & Government, Indore, Madhya Pradesh - 2025
                       </p>
                       <p className="text-sm">
                         This study demonstrates the efficacy of ensemble machine learning models in predicting 
-                        diabetes risk from blood biomarkers with over 85% accuracy, outperforming traditional 
+                        diabetes risk from various biomarkers with over 85% accuracy, outperforming traditional 
                         clinical scoring systems.
-                      </p>
-                    </div>
-                    
-                    <div className="border-b pb-5">
-                      <h3 className="font-semibold mb-2">Salivary Biomarkers for Early Detection of Oral Cancer: A Deep Learning Approach</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Journal of Oral Oncology (2024)
-                      </p>
-                      <p className="text-sm">
-                        This research presents a novel deep learning framework for analyzing multiple salivary 
-                        biomarkers to detect early-stage oral cancer, achieving 82% sensitivity and 88% specificity.
-                      </p>
-                    </div>
-                    
-                    <div className="border-b pb-5">
-                      <h3 className="font-semibold mb-2">CSF Biomarker Profiles for Alzheimer's Disease Prediction: A Support Vector Machine Analysis</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Neurology Research International (2024)
-                      </p>
-                      <p className="text-sm">
-                        This study applied SVM models to analyze cerebrospinal fluid biomarkers for early 
-                        Alzheimer's disease detection, identifying key markers and achieving high diagnostic accuracy.
-                      </p>
-                    </div>
-                    
-                    <div className="border-b pb-5">
-                      <h3 className="font-semibold mb-2">Multi-Fluid Biomarker Integration for Comprehensive Health Risk Assessment</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        NPJ Digital Medicine (2023)
-                      </p>
-                      <p className="text-sm">
-                        This paper presents the first comprehensive system for integrating biomarkers from multiple 
-                        body fluids into a unified health risk assessment framework using advanced machine learning techniques.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold mb-2">AI-Driven Personalized Health Recommendations Based on Biomarker Analysis</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Journal of Personalized Medicine (2023)
-                      </p>
-                      <p className="text-sm">
-                        This research evaluated the effectiveness of AI-generated health recommendations based on 
-                        biomarker profiles, showing significant improvements in patient health outcomes through 
-                        targeted lifestyle modifications.
                       </p>
                     </div>
                   </div>
@@ -217,103 +169,6 @@ export default function Research() {
               </Card>
             </TabsContent>
             
-            <TabsContent value="partnerships" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Research Partnerships</CardTitle>
-                  <CardDescription>
-                    Our collaborations with academic and medical institutions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="bg-muted p-5 rounded-lg">
-                      <h3 className="font-semibold text-xl mb-2">Academic Institutions</h3>
-                      <ul className="space-y-3">
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">Stanford Medical Informatics Lab</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Collaboration on advanced machine learning models for biomarker analysis and algorithm validation.
-                          </p>
-                        </li>
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">MIT Biological Engineering Department</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Research partnership on novel biomarker discovery and validation using high-throughput screening methods.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium">Oxford Neuroscience Department</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Collaborative research on CSF biomarkers for neurodegenerative disease prediction and progression modeling.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-muted p-5 rounded-lg">
-                      <h3 className="font-semibold text-xl mb-2">Medical Centers</h3>
-                      <ul className="space-y-3">
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">Mayo Clinic</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Clinical validation studies for our prediction models across multiple disease categories.
-                          </p>
-                        </li>
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">Cleveland Clinic</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Specialized research on cardiovascular biomarkers and risk prediction algorithms.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium">National University Hospital Singapore</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Cross-population validation studies and Asian-specific biomarker research.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-muted p-5 rounded-lg">
-                      <h3 className="font-semibold text-xl mb-2">Research Organizations</h3>
-                      <ul className="space-y-3">
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">Alzheimer's Disease Neuroimaging Initiative</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Access to longitudinal data for validation of our Alzheimer's prediction models.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium">American Diabetes Association</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Research funding and collaborative studies on novel diabetes biomarkers and prediction.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-muted p-5 rounded-lg">
-                      <h3 className="font-semibold text-xl mb-2">Technology Partners</h3>
-                      <ul className="space-y-3">
-                        <li className="border-b pb-3">
-                          <h4 className="font-medium">Anthropic</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Integration of advanced AI models for personalized health recommendations and conversational health intelligence.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium">NVIDIA Healthcare</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Acceleration of deep learning models for biomarker analysis using specialized GPU infrastructure.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
             
             <TabsContent value="references" className="mt-6">
               <Card>
